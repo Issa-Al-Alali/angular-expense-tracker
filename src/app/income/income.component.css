@@ -1,0 +1,89 @@
+/* src/app/income/income.component.css */
+
+.income-management {
+    padding: 0; /* Remove padding if main.container in layout handles it */
+}
+
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.card {
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.form-control, .input-group-text {
+    padding: 0.75rem 1rem;
+    border-radius: 8px !important;
+}
+
+.input-group-text {
+    background-color: var(--gray-light); /* Using CSS variable from layout.component.css or global styles */
+}
+
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-primary:disabled {
+   opacity: 0.65;
+   cursor: not-allowed;
+}
+
+/* Error Message Styling */
+.error-message {
+    color: var(--danger); /* Using CSS variable */
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-size: 0.875rem; /* Smaller font size */
+}
+
+/* Success Message Styling */
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1); /* Using secondary color with opacity */
+    color: var(--secondary); /* Using CSS variable */
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Info Alert Styling (for loading) */
+.alert-info {
+     background-color: rgba(74, 144, 226, 0.1); /* Using a blueish tint */
+     color: var(--primary); /* Using primary color */
+     border: none;
+     border-radius: 0.5rem;
+     padding: 0.75rem 1.25rem;
+     margin-bottom: 1rem;
+}
+
+/* Danger Alert Styling (for fetch errors) */
+.alert-danger {
+     background-color: rgba(240, 80, 80, 0.1); /* Using danger color with opacity */
+     color: var(--danger); /* Using CSS variable */
+     border: none;
+     border-radius: 0.5rem;
+     padding: 0.75rem 1.25rem;
+     margin-bottom: 1rem;
+}
+
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.25rem;
+    }
+}

@@ -1,0 +1,44 @@
+<div class="background">
+    <div class="container">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <h1>Login</h1>
+  
+        <div *ngIf="apiErrors?.non_field_errors" class="error-message">
+          <p *ngFor="let error of apiErrors?.non_field_errors || []">{{ error }}</p>
+        </div>
+  
+        <div class="input-group">
+          <label for="email">Email:</label>
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" formControlName="email">
+          <div *ngIf="loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)" class="error-message">
+            <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
+            <div *ngIf="loginForm.get('email')?.errors?.['email']">Enter a valid email address.</div>
+          </div>
+          <div *ngIf="apiErrors?.['email']" class="error-message">
+            <p *ngFor="let error of apiErrors?.['email']">{{ error }}</p>
+          </div>
+        </div>
+  
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" formControlName="password">
+          <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="error-message">
+            <div *ngIf="loginForm.get('password')?.errors?.['required']">Password is required.</div>
+          </div>
+          <div *ngIf="apiErrors?.['password']" class="error-message">
+            <p *ngFor="let error of apiErrors?.['password']">{{ error }}</p>
+          </div>
+        </div>
+  
+        <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading">
+          {{ isLoading ? 'Logging In...' : 'Login' }}
+        </button>
+  
+        <p class="register-redirect">Don't have an account? <a [routerLink]="['/register']" class="register-link">Register</a></p>
+  
+      </form>
+    </div>
+  </div>
+  

@@ -1,0 +1,64 @@
+<header>
+    <div class="navbar">
+      <div class="brand">
+        <i class="bi bi-pie-chart-fill brand-icon"></i>
+        <h1 class="brand-title">Finance Tracker</h1>
+      </div>
+  
+      <div class="nav-links">
+        <a routerLink="/dashboard" class="nav-link" routerLinkActive="active">
+          <i class="bi bi-house-door"></i> Dashboard
+        </a>
+        <a routerLink="/incomes" class="nav-link" routerLinkActive="active">
+          <i class="bi bi-cash-stack"></i> Incomes
+        </a>
+        <a routerLink="/expenses" class="nav-link" routerLinkActive="active">
+          <i class="bi bi-credit-card"></i> Expenses
+        </a>
+        <a routerLink="/videos" class="nav-link" routerLinkActive="active">
+          <i class="bi bi-collection-play"></i> Videos
+        </a>
+  
+        <div class="user-profile" *ngIf="isAuthenticated$ | async">
+          <div class="dropdown">
+            <button class="profile-pic-container dropdown-toggle"
+                    id="profileDropdown"
+                    type="button"
+                    aria-expanded="false"
+                    data-bs-toggle="dropdown"
+                    (click)="toggleDropdown()"> <ng-container *ngIf="userProfilePictureUrl; else profilePlaceholder">
+                <img [src]="userProfilePictureUrl" alt="Profile Picture" class="profile-pic">
+              </ng-container>
+              <ng-template #profilePlaceholder>
+                <div class="profile-pic-placeholder">
+                  <i class="bi bi-person-circle"></i>
+                </div>
+              </ng-template>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+              <li>
+                <a class="dropdown-item" routerLink="/profile">
+                  <i class="bi bi-person"></i> My Profile
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-danger" (click)="logout()">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <main class="container">
+    <div class="messages">
+      </div>
+  
+    <router-outlet></router-outlet>
+  </main>
+  
+  

@@ -1,0 +1,36 @@
+/* src/app/dashboard/dashboard.component.css */
+
+.about-page {
+    padding: 0; /* Remove padding if main.container in layout handles it */
+}
+
+.hero-section {
+    border-left: 4px solid var(--primary); /* Using CSS variable from layout.component.css or global styles */
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-icon:hover {
+    transform: scale(1.1);
+}
+
+.team-section .card {
+    transition: transform 0.3s ease;
+}
+
+.team-section .card:hover {
+    transform: translateY(-5px);
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .hero-section img {
+        margin-top: 1.5rem;
+    }
+}

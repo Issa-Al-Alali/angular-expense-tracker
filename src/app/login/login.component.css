@@ -1,0 +1,171 @@
+/* src/app/login/login.component.css */
+
+/* General Body and Background Styling */
+/* Note: Body styles like background are often applied globally in styles.css */
+/* or handled by a layout component in a real app. Keeping it here for now */
+/* to match the original HTML's self-contained styling. */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background: linear-gradient(to right, #00c6ff, #0072ff); /* Gradient background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Background and Container Styling */
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2); /* Semi-transparent overlay */
+    display: flex; /* Use flexbox to center content */
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto; /* Add scrolling for smaller screens */
+    padding: 20px; /* Add padding for smaller screens */
+}
+
+.container {
+    background-color: #fff;
+    padding: 40px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 450px;
+    margin: auto; /* Center the container */
+    z-index: 1; /* Ensure container is above background overlay */
+}
+
+/* Header Styling */
+h1 {
+    text-align: center;
+    font-size: 30px;
+    color: #0072ff;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Form Grouping */
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.input-group label {
+    font-size: 16px;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Input Fields */
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    padding-left: 40px; /* Space for icons */
+    background-color: #f5f5f5;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+    border-color: #0072ff;
+    outline: none;
+    background-color: #ffffff;
+}
+
+/* Icons inside Input Fields */
+.input-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%; /* Adjusted to center vertically relative to the input */
+    transform: translateY(calc(50% + 4px)); /* Adjust based on label height and padding */
+    color: #0072ff;
+    pointer-events: none; /* Ensure icon doesn't interfere with input clicks */
+}
+
+/* Adjust icon vertical position more precisely */
+.input-group input + i {
+   top: 50%;
+   transform: translateY(-50%);
+}
+
+/* Submit Button */
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    background-color: #0072ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+.submit-btn:hover {
+    background-color: #005bb5;
+}
+
+.submit-btn:disabled {
+    background-color: #a0caff; /* Lighter blue for disabled state */
+    cursor: not-allowed;
+}
+
+/* Error Message Styling */
+.error-message {
+    color: #ff4d4d;
+    margin-top: 5px; /* Adjusted margin */
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+/* Register Redirect */
+.register-redirect {
+    text-align: center;
+    font-size: 16px;
+    color: #777;
+    margin-top: 20px;
+}
+
+.register-redirect .register-link {
+    color: #0072ff;
+    text-decoration: none;
+}
+
+.register-redirect .register-link:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .container {
+        padding: 30px 20px; /* Reduce padding on smaller screens */
+    }
+    h1 {
+        font-size: 24px; /* Reduce font size */
+    }
+    input[type="text"], input[type="email"], input[type="password"] {
+        padding: 12px 15px; /* Reduce padding */
+        padding-left: 35px; /* Adjust padding for icons */
+        font-size: 14px; /* Reduce font size */
+    }
+     .input-group i {
+         left: 8px; /* Adjust icon position */
+     }
+    .submit-btn {
+        padding: 12px; /* Reduce padding */
+        font-size: 16px; /* Reduce font size */
+    }
+    .register-redirect {
+        font-size: 14px; /* Reduce font size */
+    }
+}

@@ -1,0 +1,69 @@
+<div class="background">
+    <div class="container">
+      <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="register-form">
+        <h1>Register</h1>
+  
+        <div *ngIf="apiErrors?.non_field_errors" class="error-message">
+          <p *ngFor="let error of apiErrors?.non_field_errors">{{ error }}</p>
+        </div>
+  
+        <div class="input-group">
+          <label for="username">Username:</label>
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" formControlName="username">
+          <div *ngIf="registrationForm.get('username')?.invalid && (registrationForm.get('username')?.dirty || registrationForm.get('username')?.touched)" class="error-message">
+            <div *ngIf="registrationForm.get('username')?.errors?.['required']">Username is required.</div>
+            </div>
+          <div *ngIf="apiErrors?.['username']" class="error-message">
+            <p *ngFor="let error of apiErrors?.['username']">{{ error }}</p>
+          </div>
+        </div>
+  
+        <div class="input-group">
+          <label for="email">Email:</label>
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" formControlName="email">
+          <div *ngIf="registrationForm.get('email')?.invalid && (registrationForm.get('email')?.dirty || registrationForm.get('email')?.touched)" class="error-message">
+            <div *ngIf="registrationForm.get('email')?.errors?.['required']">Email is required.</div>
+            <div *ngIf="registrationForm.get('email')?.errors?.['email']">Enter a valid email address.</div>
+            </div>
+          <div *ngIf="apiErrors?.['email']" class="error-message">
+            <p *ngFor="let error of apiErrors?.['email']">{{ error }}</p>
+          </div>
+        </div>
+  
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" formControlName="password">
+          <div *ngIf="registrationForm.get('password')?.invalid && (registrationForm.get('password')?.dirty || registrationForm.get('password')?.touched)" class="error-message">
+            <div *ngIf="registrationForm.get('password')?.errors?.['required']">Password is required.</div>
+            <div *ngIf="registrationForm.get('password')?.errors?.['minlength']">Password must be at least {{ registrationForm.get('password')?.errors?.['minlength']?.requiredLength }} characters long.</div>
+            </div>
+          <div *ngIf="apiErrors?.['password']" class="error-message">
+            <p *ngFor="let error of apiErrors?.['password']">{{ error }}</p>
+          </div>
+        </div>
+  
+        <div class="input-group">
+          <label for="confirm_password">Confirm Password:</label>
+          <i class="fas fa-lock"></i>
+          <input type="password" id="confirm_password" formControlName="confirm_password">
+          <div *ngIf="registrationForm.get('confirm_password')?.invalid && (registrationForm.get('confirm_password')?.dirty || registrationForm.get('confirm_password')?.touched)" class="error-message">
+            <div *ngIf="registrationForm.get('confirm_password')?.errors?.['required']">Confirm Password is required.</div>
+          </div>
+           <div *ngIf="registrationForm.errors?.['passwordMismatch'] && (registrationForm.get('confirm_password')?.dirty || registrationForm.get('confirm_password')?.touched)" class="error-message">
+            Passwords do not match.
+          </div>
+        </div>
+  
+        <button type="submit" class="submit-btn" [disabled]="registrationForm.invalid || isLoading">
+          {{ isLoading ? 'Registering...' : 'Register' }}
+        </button>
+  
+        <p class="login-redirect">Already have an account? <a [routerLink]="['/login']" class="login-link">Login</a></p>
+  
+      </form>
+    </div>
+  </div>
+  
