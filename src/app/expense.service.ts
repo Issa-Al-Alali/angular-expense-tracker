@@ -26,8 +26,8 @@ export interface Category {
 
 // Interface matching the summary API response structure
 export interface ExpenseSummary {
-    labels: string[]; // e.g., Month names or Category names
-    data: number[]; // Corresponding expense amounts
+  labels: string[]; // e.g., Month names or Category names
+  data: number[]; // Corresponding expense amounts
 }
 
 export interface AddExpenseResponse {
@@ -129,61 +129,61 @@ export class ExpenseService {
    * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
    */
   getMonthlySummary(year: string): Observable<ExpenseSummary> {
-     const headers = this.getAuthHeaders();
-     const userId = this.authService.getUserId();
+      const headers = this.getAuthHeaders();
+      const userId = this.authService.getUserId();
 
-     if (!userId) {
-       return throwError(() => new Error('User ID not found. Cannot fetch monthly summary.'));
-     }
+      if (!userId) {
+        return throwError(() => new Error('User ID not found. Cannot fetch monthly summary.'));
+      }
 
-     const params = new HttpParams().set('year', year);
-     // Using the provided API endpoint structure
-     const url = `${this.apiUrl}/expenses/${userId}/monthly-summary/`;
+      const params = new HttpParams().set('year', year);
+      // Using the provided API endpoint structure
+      const url = `${this.apiUrl}/expenses/${userId}/monthly-summary/`;
 
-     console.log('Fetching monthly summary with URL:', url, 'and params:', params.toString());
+      console.log('Fetching monthly summary with URL:', url, 'and params:', params.toString());
 
-     return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
-       tap(response => console.log('Fetched monthly summary successfully')),
-       catchError(error => {
-         console.error('Error fetching monthly summary:', error);
-         return throwError(() => error);
-       })
-     );
+      return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
+        tap(response => console.log('Fetched monthly summary successfully')),
+        catchError(error => {
+          console.error('Error fetching monthly summary:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
-   /**
-   * Fetches category expense summary data for charting.
-   * GET: http://localhost:8000/expenses/{user_id}/category-summary
-   * (Optional query params year, category_name based on previous implementation)
-   * @param filters - Optional query parameters (year, category_name).
-   * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
-   */
+    /**
+     * Fetches category expense summary data for charting.
+     * GET: http://localhost:8000/expenses/{user_id}/category-summary
+     * (Optional query params year, category_name based on previous implementation)
+     * @param filters - Optional query parameters (year, category_name).
+     * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
+     */
   getCategorySummary(filters?: { year?: string, category_name?: string }): Observable<ExpenseSummary> {
-     const headers = this.getAuthHeaders();
-     const userId = this.authService.getUserId();
+      const headers = this.getAuthHeaders();
+      const userId = this.authService.getUserId();
 
-     if (!userId) {
-       return throwError(() => new Error('User ID not found. Cannot fetch category summary.'));
-     }
+      if (!userId) {
+        return throwError(() => new Error('User ID not found. Cannot fetch category summary.'));
+      }
 
-     let params = new HttpParams();
-     if (filters) {
-        if (filters.year) params = params.set('year', filters.year);
-        if (filters.category_name) params = params.set('category_name', filters.category_name);
-     }
+      let params = new HttpParams();
+      if (filters) {
+         if (filters.year) params = params.set('year', filters.year);
+         if (filters.category_name) params = params.set('category_name', filters.category_name);
+      }
 
-     // Using the provided API endpoint structure
-     const url = `${this.apiUrl}/expenses/${userId}/category-summary/`;
+      // Using the provided API endpoint structure
+      const url = `${this.apiUrl}/expenses/${userId}/category-summary/`;
 
-     console.log('Fetching category summary with URL:', url, 'and params:', params.toString());
+      console.log('Fetching category summary with URL:', url, 'and params:', params.toString());
 
-     return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
-       tap(response => console.log('Fetched category summary successfully')),
-       catchError(error => {
-         console.error('Error fetching category summary:', error);
-         return throwError(() => error);
-       })
-     );
+      return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
+        tap(response => console.log('Fetched category summary successfully')),
+        catchError(error => {
+          console.error('Error fetching category summary:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
 
@@ -194,7 +194,7 @@ export class ExpenseService {
    * @param expenseData - The expense data (amount, description, date, location).
    * @param categoryName - The name of the category (required for the URL).
    * @param categoryId - The ID of the category (required in the body based on PUT example).
-   * @param receiptFile - Optional receipt file (PDF). *** Updated type to accept File | null | undefined ***
+   * @param receiptFile - Optional receipt file (PDF).
    * @returns An Observable with the AddExpenseResponse.
    */
   addExpense(expenseData: { amount: number, description: string, expense_date: string, location: string }, categoryName: string, categoryId: string, receiptFile?: File | null): Observable<AddExpenseResponse> {

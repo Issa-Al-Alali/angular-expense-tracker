@@ -97,11 +97,14 @@
             </thead>
             <tbody>
                 <tr *ngFor="let expense of expenses">
-                    <td>{{ expense.expense_date | date:'yyyy-MM-dd' }}</td> <td>{{ expense.category_name }}</td>
+                    <td>{{ expense.expense_date | date:'yyyy-MM-dd' }}</td>
+                    <td>{{ expense.category_name }}</td>
                     <td>{{ expense.description }}</td>
-                    <td>${{ expense.amount | number:'1.2-2' }}</td> <td>{{ expense.location || 'N/A' }}</td> <td>
+                    <td>${{ expense.amount | number:'1.2-2' }}</td>
+                    <td>{{ expense.location || 'N/A' }}</td>
+                    <td>
                         <ng-container *ngIf="expense.receipt; else noReceipt">
-                            <button class="btn btn-sm btn-info view-receipt" (click)="viewReceipt(expense.receipt)">
+                             <button class="btn btn-sm btn-info view-receipt" (click)="viewReceipt(expense.receipt)">
                                 <i class="bi bi-file-earmark-pdf"></i> View
                             </button>
                         </ng-container>
@@ -143,7 +146,7 @@
                          <input type="number" step="0.01" class="form-control" id="amount" formControlName="amount">
                          <div *ngIf="addExpenseForm.get('amount')?.invalid && (addExpenseForm.get('amount')?.dirty || addExpenseForm.get('amount')?.touched)" class="error-message">
                             <div *ngIf="addExpenseForm.get('amount')?.errors?.['required']">Amount is required.</div>
-                            <div *ngIf="addExpenseForm.get('amount')?.errors?.['min']">Amount must be greater than 0.</div>
+                             <div *ngIf="addExpenseForm.get('amount')?.errors?.['min']">Amount must be greater than 0.</div>
                          </div>
                          <div *ngIf="addExpenseApiErrors?.['amount']" class="error-message">
                              <p *ngFor="let error of addExpenseApiErrors?.['amount']">{{ error }}</p>
@@ -167,7 +170,7 @@
                          </div>
                           <div *ngIf="addExpenseApiErrors?.['expense_date']" class="error-message">
                              <p *ngFor="let error of addExpenseApiErrors?.['expense_date']">{{ error }}</p>
-                         </div>
+                          </div>
                     </div>
                     <div class="mb-3">
                         <label for="location" class="form-label">Location</label>
@@ -179,7 +182,8 @@
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
                          <select class="form-select" id="category" formControlName="category">
-                             <option value="" disabled selected>Select a category</option> <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+                              <option value="" disabled selected>Select a category</option>
+                              <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
                         </select>
                          <div *ngIf="addExpenseForm.get('category')?.invalid && (addExpenseForm.get('category')?.dirty || addExpenseForm.get('category')?.touched)" class="error-message">
                             <div *ngIf="addExpenseForm.get('category')?.errors?.['required']">Category is required.</div>
@@ -261,7 +265,8 @@
                     <div class="mb-3">
                         <label for="edit_category" class="form-label">Category</label>
                          <select class="form-select" id="edit_category" formControlName="category">
-                            <option value="" disabled selected>Select a category</option> <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+                            <option value="" disabled selected>Select a category</option>
+                             <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
                         </select>
                          <div *ngIf="editExpenseForm.get('category')?.invalid && (editExpenseForm.get('category')?.dirty || editExpenseForm.get('category')?.touched)" class="error-message">
                             <div *ngIf="editExpenseForm.get('category')?.errors?.['required']">Category is required.</div>

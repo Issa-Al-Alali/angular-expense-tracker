@@ -1,3 +1,5 @@
+// In expenses.component.ts
+
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -39,14 +41,43 @@ Chart.register(
 
 // Import jsPDF directly from jspdf
 import jsPDF from 'jspdf';
-// Import jspdf-autotable. This import is often enough to attach the plugin.
-import 'jspdf-autotable';
+console.log('jsPDF imported.');
+// *** Revised Import for jspdf-autotable ***
+// Import the plugin directly. This often ensures it modifies the jsPDF prototype.
+import autoTable from 'jspdf-autotable';
+console.log('jspdf-autotable imported.');
+
+// --- Workaround Attempt for Side Effect Tree-Shaking ---
+// Create a dummy instance or reference immediately after import
+// to signal to the bundler that the library and its side effects are "used".
+// This is an experimental fix for issues with modern bundlers and side-effect libraries.
+try {
+  // Simply referencing the imported jsPDF object might help prevent tree-shaking
+  // of the jspdf-autotable import's side effect.
+  console.log('Referencing jsPDF after autotable import:', jsPDF);
+
+  // Optional: Create a dummy instance. This is less clean but sometimes effective.
+  // const dummyDoc = new jsPDF();
+  // console.log('Created dummy jsPDF instance.');
+  // if (!(dummyDoc.constructor as any).autoTable) { // Check prototype on constructor
+  //    console.warn('autoTable not on dummy instance prototype immediately.');
+  // } else {
+  //    console.log('autoTable *is* on dummy instance prototype immediately.');
+  // }
+
+} catch (e) {
+   console.error('Error during post-import reference/check:', e);
+}
+// --- End Workaround Attempt ---
+
+
+console.log('autoTable on prototype immediately after imports:', typeof (jsPDF.prototype as any).autoTable);
 
 
 // Declare bootstrap if still using CDN for its JS features like modals
 declare const bootstrap: any;
 
-// *** Added: Interface for monthlyData in PDF generation ***
+// Interface for monthlyData in PDF generation
 interface MonthlySummaryRow {
     month: string;
     income: string;
@@ -156,17 +187,17 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     this.subscriptions.push(routeSubscription);
 
-     // Subscription to filter form value changes (kept for chart updates when filters change)
-     const filterFormSubscription = this.filterForm.valueChanges.pipe(
+      // Subscription to filter form value changes (kept for chart updates when filters change)
+      const filterFormSubscription = this.filterForm.valueChanges.pipe(
         debounceTime(500),
         distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
-     ).subscribe(filters => {
+      ).subscribe(filters => {
         console.log('Filter form value changed:', filters);
         // Fetch expenses and update chart based on the new filters
         this.fetchExpenses();
         this.fetchChartData(this.currentChartType); // Update chart with new filters
-     });
-     this.subscriptions.push(filterFormSubscription);
+      });
+      this.subscriptions.push(filterFormSubscription);
   }
 
   ngAfterViewInit(): void {
@@ -175,22 +206,23 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     modalElement.addEventListener('hidden.bs.modal', () => {
       console.log('Edit modal was hidden.');
     });
-     console.log('ngAfterViewInit completed. Edit modal hidden listener attached.');
+      console.log('ngAfterViewInit completed. Edit modal hidden listener attached.');
 
-     // Initial chart render after view is initialized
-     // We moved the initial fetchChartData call into the routeSubscription
-     // to ensure filters from the URL are applied first.
-     // However, we can still add a check here to render an empty chart initially
-     // if no year is set, preventing the "Canvas element not found" error on first load.
-     if (!this.filterForm.value.year) {
-         this.renderChart('monthly', { labels: [], data: [] });
-     }
+      // Initial chart render after view is initialized
+      // We moved the initial fetchChartData call into the routeSubscription
+      // to ensure filters from the URL are applied first.
+      // However, we can still add a check here to render an empty chart initially
+      // if no year is set, preventing the "Canvas element not found" error on first load.
+      if (!this.filterForm.value.year) {
+          this.renderChart('monthly', { labels: [], data: [] });
+      }
 
 
-     // Log library availability after view init
-     console.log('Chart.js available:', typeof Chart !== 'undefined');
-     console.log('jsPDF available:', typeof jsPDF !== 'undefined');
-     console.log('jsPDF autoTable plugin available:', typeof (jsPDF as any).autoTable !== 'undefined');
+      // Log library availability after view init
+      console.log('Chart.js available:', typeof Chart !== 'undefined');
+      console.log('jsPDF available:', typeof jsPDF !== 'undefined');
+      // *** Revised check for autoTable availability ***
+      console.log('jsPDF autoTable plugin available:', typeof (jsPDF.prototype as any).autoTable === 'function'); // Check again here
   }
 
 
@@ -198,7 +230,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     // Destroy the chart instance when the component is destroyed
     if (this.expenseChart) {
-      console.log('Destroying chart instance in ngOnDestroy.');
+      console.log('Destroying existing chart instance in ngOnDestroy.');
       this.expenseChart.destroy();
       this.expenseChart = undefined; // Set to undefined after destroying
     }
@@ -261,7 +293,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param type - The type of chart data to fetch ('monthly' or 'category').
    */
   fetchChartData(type: 'monthly' | 'category'): void {
-      console.log(`Fetching ${type} chart data...`);
+      console.log(`Workspaceing ${type} chart data...`);
       this.isLoadingChart = true;
       this.fetchChartError = null;
 
@@ -308,7 +340,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   renderChart(type: 'monthly' | 'category', chartData: ExpenseSummary): void {
     console.log(`Rendering ${type} chart with data:`, chartData);
-    // *** Added check for nativeElement and a small delay ***
+    // Added check for nativeElement and a small delay
     if (!this.expenseChartCanvas || !this.expenseChartCanvas.nativeElement) {
         console.error('Chart canvas element or nativeElement not found.');
         this.isLoadingChart = false; // Ensure loading is false if element is missing
@@ -335,39 +367,39 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.expenseChart = undefined; // Set to undefined after destroying
     }
 
-     // Display message if no data
-     if (!chartData.labels || chartData.labels.length === 0 || !chartData.data || chartData.data.length === 0) {
-         chartCtx.font = '16px Arial';
-         chartCtx.textAlign = 'center';
-         chartCtx.fillStyle = '#6c757d'; // Bootstrap muted text color
-         const message = type === 'monthly' && !this.filterForm.value.year
-             ? 'Please select a year to view monthly expenses'
-             : 'No data available for the selected filters';
-         chartCtx.fillText(message, chartCtx.canvas.width / 2, chartCtx.canvas.height / 2);
-         this.isLoadingChart = false; // Ensure loading is false
-         console.log('Rendering empty chart with message:', message);
-         return; // Stop here if no data
-     }
+      // Display message if no data
+      if (!chartData.labels || chartData.labels.length === 0 || !chartData.data || chartData.data.length === 0) {
+          chartCtx.font = '16px Arial';
+          chartCtx.textAlign = 'center';
+          chartCtx.fillStyle = '#6c757d'; // Bootstrap muted text color
+          const message = type === 'monthly' && !this.filterForm.value.year
+              ? 'Please select a year to view monthly expenses'
+              : 'No data available for the selected filters';
+          chartCtx.fillText(message, chartCtx.canvas.width / 2, chartCtx.canvas.height / 2);
+          this.isLoadingChart = false; // Ensure loading is false
+          console.log('Rendering empty chart with message:', message);
+          return; // Stop here if no data
+      }
 
 
     // Determine background colors
     const backgroundColor = type === 'monthly'
         ? chartData.data.map(amount => {
-             if (this.currentIncome && this.currentIncome.budget_amount) {
-                 const incomeAmount = parseFloat(this.currentIncome.budget_amount);
-                 return amount > incomeAmount ? 'rgba(255, 99, 132, 0.5)' : 'rgba(54, 162, 235, 0.5)';
-             }
-             return 'rgba(54, 162, 235, 0.5)';
+            if (this.currentIncome && this.currentIncome.budget_amount) {
+                const incomeAmount = parseFloat(this.currentIncome.budget_amount);
+                return amount > incomeAmount ? 'rgba(255, 99, 132, 0.5)' : 'rgba(54, 162, 235, 0.5)';
+            }
+            return 'rgba(54, 162, 235, 0.5)';
           })
         : this.generateCategoryColors(chartData.labels.length, 0.5);
 
-     const borderColor = type === 'monthly'
+      const borderColor = type === 'monthly'
         ? chartData.data.map(amount => {
-             if (this.currentIncome && this.currentIncome.budget_amount) {
-                 const incomeAmount = parseFloat(this.currentIncome.budget_amount);
-                 return amount > incomeAmount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)';
-             }
-             return 'rgba(54, 162, 235, 1)';
+            if (this.currentIncome && this.currentIncome.budget_amount) {
+                const incomeAmount = parseFloat(this.currentIncome.budget_amount);
+                return amount > incomeAmount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)';
+            }
+            return 'rgba(54, 162, 235, 1)';
           })
         : this.generateCategoryColors(chartData.labels.length, 1);
 
@@ -449,21 +481,23 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
    * Updates URL query parameters and triggers a full page reload.
    */
   onFilterSubmit(): void {
-       console.log('Filter form submitted. Updating URL and refreshing.');
-       const filters = this.filterForm.value;
-       const queryParams: any = {};
-       if (filters.year) queryParams['year'] = filters.year;
-       if (filters.month) queryParams['month'] = filters.month;
-       if (filters.category_name) queryParams['category_name'] = filters.category_name;
-       if (filters.sort) queryParams['sort'] = filters.sort;
+        console.log('Filter form submitted. Updating URL and refreshing.');
+        const filters = this.filterForm.value;
+        const queryParams: any = {};
+        if (filters.year) queryParams['year'] = filters.year;
+        if (filters.month) queryParams['month'] = filters.month;
+        if (filters.category_name) queryParams['category_name'] = filters.category_name;
+        if (filters.sort) queryParams['sort'] = filters.sort;
 
-       const urlTree = this.router.createUrlTree([], {
-           relativeTo: this.route,
-           queryParams: queryParams,
-           queryParamsHandling: 'merge'
-       });
+        const urlTree = this.router.createUrlTree([], {
+            relativeTo: this.route,
+            queryParams: queryParams,
+            queryParamsHandling: 'merge'
+        });
 
-       window.location.href = this.router.serializeUrl(urlTree);
+        // Using window.location.href for a full refresh is okay for filters
+        // if the intention is to reset component state entirely.
+        window.location.href = this.router.serializeUrl(urlTree);
   }
 
   /**
@@ -478,6 +512,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       category_name: '',
       sort: ''
     });
+    // Navigate without query params to effectively reset
     window.location.href = this.router.url.split('?')[0];
   }
 
@@ -517,7 +552,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
           }
       }
 
-      // *** Updated: Pass receiptFile as File | null | undefined ***
+      // Pass receiptFile as File | null | undefined
       this.expenseService.addExpense(expenseDataForService, categoryName, categoryId, receiptFile).subscribe({
         next: (response) => {
           console.log('Expense added successfully', response);
@@ -553,11 +588,12 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('Attempting to open add modal.');
       this.addExpenseForm.reset();
       this.addExpenseApiErrors = null;
+      // Explicitly clear file input value if needed (optional, as reset() might handle it)
       const receiptInput = this.addExpenseModal.nativeElement.querySelector('#receipt') as HTMLInputElement;
       if (receiptInput) {
           receiptInput.value = '';
       }
-      this.addExpenseForm.get('receipt')?.setValue(null);
+      this.addExpenseForm.get('receipt')?.setValue(null); // Ensure form control is null
 
       const modalElement = this.addExpenseModal.nativeElement;
       let modal = bootstrap.Modal.getInstance(modalElement);
@@ -580,11 +616,11 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.editExpenseApiErrors = null;
       this.editExpenseForm.patchValue({
           id: expense.id,
-          amount: parseFloat(expense.amount),
+          amount: parseFloat(expense.amount), // Ensure amount is a number
           description: expense.description,
           expense_date: expense.expense_date,
           location: expense.location,
-          category: expense.category
+          category: expense.category // This should be the category ID
       });
 
       console.log('Edit form patched with values:', this.editExpenseForm.value);
@@ -599,7 +635,6 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       } else {
           console.log('Existing edit modal instance found.');
       }
-
       modal.show();
       console.log('Bootstrap edit modal show() called.');
   }
@@ -628,14 +663,14 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
           description: formData.description,
           expense_date: formData.expense_date,
           location: formData.location,
-          category: formData.category
+          category: formData.category // This should be the category ID
       };
 
       this.expenseService.updateExpense(expenseId, updateData).subscribe({
         next: (response) => {
           console.log('Expense updated successfully', response);
           this.closeModal(this.editExpenseModal);
-          window.location.reload();
+          window.location.reload(); // Simple reload after successful update
         },
         error: (error) => {
           console.error('Error updating expense:', error);
@@ -659,7 +694,11 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.expenseService.deleteExpense(expenseId).subscribe({
         next: (response) => {
           console.log('Expense deleted successfully', response);
-          window.location.reload();
+          // Remove the deleted expense from the local array instead of full reload
+          this.expenses = this.expenses.filter(exp => exp.id !== expenseId);
+          this.isDeletingExpense = false;
+           // Consider refreshing chart data if needed
+           this.fetchChartData(this.currentChartType);
         },
         error: (error) => {
           console.error('Error deleting expense:', error);
@@ -678,6 +717,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   viewReceipt(receiptUrl: string | null): void {
       if (receiptUrl) {
+          // Assuming your Django server is serving static/media files from localhost:8000
           const fullUrl = `http://localhost:8000${receiptUrl}`;
           window.open(fullUrl, '_blank');
       } else {
@@ -685,171 +725,162 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       }
   }
 
-  downloadYearlyPDF(): void {
-      console.log('Attempting to generate yearly PDF.');
-      const year = this.filterForm.value.year;
-      if (!year || !/^\d{4}$/.test(year)) {
-          alert('Please enter a valid 4-digit year in the filter to generate the yearly summary.');
-          console.log('PDF generation skipped: Invalid year filter.');
-          return;
+  async downloadYearlyPDF(): Promise<void> {
+    console.log('Attempting to generate yearly PDF.');
+    const year = this.filterForm.value.year;
+    
+    if (!year || !/^\d{4}$/.test(year)) {
+      alert('Please enter a valid 4-digit year in the filter to generate the yearly summary.');
+      console.log('PDF generation skipped: Invalid year filter.');
+      return;
+    }
+
+    try {
+      // Load the data first
+      const expenseData = await this.expenseService.getMonthlySummary(year).toPromise();
+      console.log('Received monthly summary data for PDF:', expenseData);
+
+      if (!expenseData?.labels || expenseData.labels.length === 0) {
+        throw new Error('No expense data available for the selected year');
       }
 
-      // Check if jsPDF and autoTable are loaded by checking the imported objects/methods
-      // We check for the autoTable method's existence on the jsPDF prototype
-      if (typeof jsPDF === 'undefined' || typeof (jsPDF.prototype as any).autoTable !== 'function') {
-           console.error('jsPDF or AutoTable plugin not properly loaded after import.');
-           alert('PDF generation failed: Required libraries not loaded correctly.');
-           return;
+      // Initialize jsPDF
+      const doc = new jsPDF();
+
+      const monthlyIncome = this.currentIncome ? parseFloat(this.currentIncome.budget_amount) : 0;
+      const monthlyData: MonthlySummaryRow[] = [];
+      let totalSpending = 0;
+
+      // Prepare data
+      for (let i = 0; i < expenseData.labels.length; i++) {
+        const monthName = expenseData.labels[i];
+        const spending = expenseData.data[i];
+        totalSpending += spending;
+        const remaining = monthlyIncome - spending;
+
+        monthlyData.push({
+          month: monthName,
+          income: monthlyIncome.toFixed(2),
+          spending: spending.toFixed(2),
+          remaining: remaining.toFixed(2),
+          isNegative: remaining < 0
+        });
       }
-      console.log('jsPDF and autoTable appear to be loaded.');
 
+      const yearlyIncome = monthlyIncome * 12;
+      const yearlyRemaining = yearlyIncome - totalSpending;
+      const isYearlyPositive = yearlyRemaining >= 0;
 
-      alert('Generating PDF...');
+      // Add title
+      doc.setFontSize(18);
+      doc.text(`Yearly Expense Summary - ${year}`, 14, 22);
 
-      this.expenseService.getMonthlySummary(year).subscribe({
-          next: (expenseData) => {
-              console.log('Received monthly summary data for PDF:', expenseData);
-              try {
-                  // Use the imported jsPDF
-                  const doc = new jsPDF();
+      // Add monthly breakdown section
+      doc.setFontSize(12);
+      doc.text('Monthly Breakdown:', 14, 35);
 
-                  const monthlyIncome = this.currentIncome ? parseFloat(this.currentIncome.budget_amount) : 0;
-
-                  // *** Added: Explicit type annotation for monthlyData ***
-                  const monthlyData: MonthlySummaryRow[] = [];
-                  let totalSpending = 0;
-
-                  if (!expenseData.labels || !expenseData.data || expenseData.labels.length === 0) {
-                     console.warn('No expense data available for PDF generation for year:', year);
-                     throw new Error('No expense data available for the selected year');
-                  }
-
-                  for (let i = 0; i < expenseData.labels.length; i++) {
-                      const monthName = expenseData.labels[i];
-                      const spending = expenseData.data[i];
-                      totalSpending += spending;
-                      const remaining = monthlyIncome - spending;
-
-                      monthlyData.push({
-                          month: monthName,
-                          income: monthlyIncome.toFixed(2),
-                          spending: spending.toFixed(2),
-                          remaining: remaining.toFixed(2),
-                          isNegative: remaining < 0
-                      });
-                  }
-
-                  const yearlyIncome = monthlyIncome * 12;
-                  const yearlyRemaining = yearlyIncome - totalSpending;
-                  const isYearlyPositive = yearlyRemaining >= 0;
-
-                  doc.setFontSize(18);
-                  doc.text(`Yearly Expense Summary - ${year}`, 14, 22);
-
-                  doc.setFontSize(12);
-                  doc.text('Monthly Breakdown:', 14, 35);
-
-                  // Use autoTable method directly on the jsPDF instance
-                  (doc as any).autoTable({
-                      startY: 40,
-                      head: [['Month', 'Income', 'Spending', 'Remaining']],
-                      body: monthlyData.map(row => [
-                          row.month,
-                          `$${row.income}`,
-                          `$${row.spending}`,
-                          `$${row.remaining}`
-                      ]),
-                      theme: 'striped',
-                      headStyles: { fillColor: [66, 139, 202] },
-                      bodyStyles: { fontSize: 10 },
-                      columnStyles: {
-                          3: { cellWidth: 'auto' }
-                      },
-                      didParseCell: function(data: any) {
-                          if (data.row.index >= 0 && data.column.index === 3) {
-                              const rowData = monthlyData[data.row.index];
-                              if (rowData.isNegative) {
-                                  data.cell.styles = data.cell.styles || {};
-                                  data.cell.styles.textColor = [255, 0, 0];
-                                  data.cell.styles.fontStyle = 'bold';
-                                  data.cell.styles.fillColor = [255, 230, 230];
-                              }
-                          }
-                      }
-                  });
-
-                  const finalY = (doc as any).lastAutoTable.finalY + 20;
-                  doc.setFontSize(14);
-                  doc.text('Yearly Summary:', 14, finalY);
-
-                  (doc as any).autoTable({
-                      startY: finalY + 5,
-                      head: [['Total Income', 'Total Spending', 'Total Remaining']],
-                      body: [[
-                          `$${yearlyIncome.toFixed(2)}`,
-                          `$${totalSpending.toFixed(2)}`,
-                          `$${yearlyRemaining.toFixed(2)}`
-                      ]],
-                      theme: 'grid',
-                      headStyles: { fillColor: [92, 184, 92] },
-                      didParseCell: function(data: any) {
-                          if (data.column.index === 2 && !isYearlyPositive) {
-                              data.cell.styles = data.cell.styles || {};
-                              data.cell.styles.fontStyle = 'bold';
-                              data.cell.styles.textColor = [255, 0, 0];
-                              data.cell.styles.fillColor = [255, 200, 200];
-                          }
-                      }
-                  });
-
-                  const feedbackY = (doc as any).lastAutoTable.finalY + 15;
-                  doc.setFontSize(12);
-
-                  if (isYearlyPositive) {
-                      doc.setTextColor(0, 128, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('GREAT JOB!', 14, feedbackY);
-                      doc.setFont('helvetica', 'normal');
-                      doc.text(`You saved $${yearlyRemaining.toFixed(2)} this year. Keep up the excellent financial management!`, 14, feedbackY + 7);
-                      doc.text('Consider investing your savings or building your emergency fund.', 14, feedbackY + 14);
-                  } else {
-                      doc.setTextColor(192, 0, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('ATTENTION!', 14, feedbackY);
-                      doc.setFont('helvetica', 'normal');
-                      doc.text(`You've overspent by $${Math.abs(yearlyRemaining).toFixed(2)} this year.`, 14, feedbackY + 7);
-                      doc.text('Consider reviewing your expenses and creating a budget to avoid debt.', 14, feedbackY + 14);
-                      doc.text('Focus on reducing non-essential spending and increasing your income if possible.', 14, feedbackY + 21);
-                  }
-
-                  doc.setTextColor(0);
-
-                  const today = new Date();
-                  doc.setFontSize(10);
-                  doc.setTextColor(100);
-                  doc.text(`Generated on: ${today.toLocaleDateString()}`, 14, doc.internal.pageSize.height - 10);
-
-                  doc.save(`Expense_Summary_${year}.pdf`);
-                  console.log('PDF generated successfully.');
-
-              } catch (error: any) {
-                  console.error('Error during PDF generation:', error);
-                  alert('Error generating PDF: ' + error.message);
-              } finally {
-              }
-          },
-          error: (error) => {
-              console.error('Error fetching data for PDF:', error);
-              alert('Could not generate PDF: Error fetching expense data');
+      // Create monthly table using autoTable
+      autoTable(doc, {
+        startY: 40,
+        head: [['Month', 'Income', 'Spending', 'Remaining']],
+        body: monthlyData.map(row => [
+          row.month,
+          `$${row.income}`,
+          `$${row.spending}`,
+          `$${row.remaining}`
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [66, 139, 202] },
+        bodyStyles: { fontSize: 10 },
+        didParseCell: (data) => {
+          if (data.row.index >= 0 && data.column.index === 3) {
+            const rowData = monthlyData[data.row.index];
+            if (rowData.isNegative) {
+              data.cell.styles = data.cell.styles || {};
+              data.cell.styles.textColor = [255, 0, 0];
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [255, 230, 230];
+            }
           }
+        }
       });
+
+      // Add yearly summary section
+      const finalY = (doc as any).lastAutoTable.finalY + 20;
+      doc.setFontSize(14);
+      doc.text('Yearly Summary:', 14, finalY);
+
+      autoTable(doc, {
+        startY: finalY + 5,
+        head: [['Total Income', 'Total Spending', 'Total Remaining']],
+        body: [[
+          `$${yearlyIncome.toFixed(2)}`,
+          `$${totalSpending.toFixed(2)}`,
+          `$${yearlyRemaining.toFixed(2)}`
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [92, 184, 92] },
+        didParseCell: (data) => {
+          if (data.column.index === 2 && !isYearlyPositive) {
+            data.cell.styles = data.cell.styles || {};
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.textColor = [255, 0, 0];
+            data.cell.styles.fillColor = [255, 200, 200];
+          }
+        }
+      });
+
+      // Add feedback section
+      const feedbackY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(12);
+
+      if (isYearlyPositive) {
+        doc.setTextColor(0, 128, 0);
+        doc.setFont('helvetica', 'bold');
+        doc.text('GREAT JOB!', 14, feedbackY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`You saved $${yearlyRemaining.toFixed(2)} this year. Keep up the excellent financial management!`, 14, feedbackY + 7);
+        doc.text('Consider investing your savings or building your emergency fund.', 14, feedbackY + 14);
+      } else {
+        doc.setTextColor(192, 0, 0);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ATTENTION!', 14, feedbackY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`You've overspent by $${Math.abs(yearlyRemaining).toFixed(2)} this year.`, 14, feedbackY + 7);
+        doc.text('Consider reviewing your expenses and creating a budget to avoid debt.', 14, feedbackY + 14);
+        doc.text('Focus on reducing non-essential spending and increasing your income if possible.', 14, feedbackY + 21);
+      }
+
+      // Add footer
+      doc.setTextColor(0);
+      const today = new Date();
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${today.toLocaleDateString()}`, 14, doc.internal.pageSize.height - 10);
+
+      // Save the PDF
+      doc.save(`Expense_Summary_${year}.pdf`);
+      console.log('PDF generated successfully.');
+
+    } catch (error) {
+      console.error('Error during PDF generation:', error);
+      alert('Error generating PDF: ' + (error as Error).message);
+    }
   }
 
+
+  /**
+   * Helper function to close a Bootstrap modal.
+   * @param modalElementRef - The ElementRef of the modal div.
+   */
   private closeModal(modalElementRef: ElementRef): void {
       const modalElement = modalElementRef.nativeElement;
       const modal = bootstrap.Modal.getInstance(modalElement);
       if (modal) {
           modal.hide();
+      } else {
+          console.warn('Could not find Bootstrap modal instance to close.');
       }
   }
+
 }
