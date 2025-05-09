@@ -1,158 +1,158 @@
-/* src/app/layout/layout.component.css - Blue Links and Title Style */
+/* src/app/layout/layout.component.css - Revamped Dark Theme with Bold Accents */
 
-/* Define CSS variables with a different palette */
+/* Define CSS variables with a bold modern palette */
 :root {
-    --primary: #4a90e2;       /* A softer blue */
-    --primary-dark: #357bd8;  /* Darker shade of the soft blue */
-    --primary-light: #6aadef; /* Lighter shade */
-    --secondary: #50e3c2;     /* Teal/Mint green */
-    --danger: #f05050;       /* Red */
-    --warning: #f8e71c;      /* Yellow */
-    --dark: #4a4a4a;         /* Dark gray text */
-    --gray-dark: #9b9b9b;    /* Medium gray */
-    --gray-medium: #d8d8d8;  /* Light gray */
-    --gray-light: #f5f5f5;    /* Very light gray */
-    --background: #f9f9f9;    /* Page background */
-    --card-bg: #ffffff;      /* Card background */
-}
-
-/* Apply global body styles (consider moving to global styles.css) */
-body {
+    --primary: #8a63d2;       /* Deep Purple */
+    --primary-dark: #6c3fc9;  /* Darker purple */
+    --primary-light: #a786e4; /* Light purple */
+    --secondary: #00bcd4;     /* Cyan accent */
+    --danger: #e53935;        /* Strong red */
+    --warning: #ffb300;       /* Bright amber */      
+    --gray-dark: #9e9e9e;     /* Medium-light gray */
+    --gray-medium: #616161;   /* Mid-dark gray */
+    --gray-light: #424242;    /* Dark background */
+    --background: #303030;    /* Page background (very dark gray) */
+    --card-bg: #383838;       /* Slightly lighter than background */
+  }
+  
+  /* Global Body Styles */
+  body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background);
     color: var(--dark);
     line-height: 1.6;
     margin: 0;
     padding: 0;
-}
-
-/* Header Styling */
-header {
-    background-color: var(--card-bg); /* White header background */
-    color: var(--dark); /* Dark text on header */
+  }
+  
+  /* Header Styling */
+  header {
+    background-color: var(--card-bg);
+    color: var(--dark);
     padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 1px solid var(--gray-medium); /* Subtle bottom border */
-}
-
-.navbar {
+    border-bottom: 1px solid var(--gray-medium);
+  }
+  
+  .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-}
-
-.brand {
+  }
+  
+  .brand {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-
-.brand-icon {
+  }
+  
+  .brand-icon {
     font-size: 1.75rem;
-    color: var(--primary); /* Primary color for icon */
-}
-
-.brand-title {
+    color: var(--primary);
+  }
+  
+  .brand-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
-    color: var(--primary); /* Set title color to primary blue */
-}
-
-/* Navigation */
-.nav-links {
+    color: var(--primary-light);
+  }
+  
+  /* Navigation */
+  .nav-links {
     display: flex;
     gap: 1.5rem;
     align-items: center;
-}
-
-.nav-link {
-    color: var(--primary); /* Set link color to primary blue */
+  }
+  
+  .nav-link {
+    color: var(--primary-light);
     text-decoration: none;
     font-weight: 500;
     padding: 0.5rem 0;
     position: relative;
     transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-    color: var(--primary-dark); /* Darker blue on hover */
-}
-
-.nav-link.active {
-    color: var(--primary-dark); /* Darker blue for active link */
-}
-
-.nav-link.active::after {
+  }
+  
+  .nav-link:hover {
+    color: var(--secondary);
+  }
+  
+  .nav-link.active {
+    color: var(--secondary);
+  }
+  
+  .nav-link.active::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: var(--primary-dark); /* Darker blue for active indicator */
-}
-
-/* User Profile */
-.user-profile {
+    background-color: var(--secondary);
+  }
+  
+  /* User Profile */
+  .user-profile {
     position: relative;
-}
-
-.profile-pic-container {
+  }
+  
+  .profile-pic-container {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid var(--gray-medium); /* Border matching the palette */
+    border: 2px solid var(--gray-medium);
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--gray-light); /* Light background for placeholder */
+    background-color: var(--gray-light);
     padding: 0;
-}
-
-.profile-pic-container:hover {
-    border-color: var(--primary); /* Primary color border on hover */
+  }
+  
+  .profile-pic-container:hover {
+    border-color: var(--primary-light);
     transform: scale(1.05);
-}
-
-.profile-pic {
+  }
+  
+  .profile-pic {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.profile-pic-placeholder {
-    color: var(--dark); /* Dark color for placeholder icon */
+  }
+  
+  .profile-pic-placeholder {
+    color: var(--dark);
     font-size: 1.25rem;
-}
-
-/* Dropdown Menu */
-.dropdown-menu {
-    border: 1px solid var(--gray-medium); /* Subtle border */
+  }
+  
+  /* Dropdown Menu */
+  .dropdown-menu {
+    border: 1px solid var(--gray-medium);
     border-radius: 0.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     padding: 0.5rem 0;
     margin-top: 0.5rem;
     min-width: 200px;
     display: none;
     position: absolute;
     right: 0;
-    background-color: var(--card-bg);
+    background-color: var(--gray-light);
     z-index: 1000;
-}
-
-.dropdown-menu.show {
+  }
+  
+  .dropdown-menu.show {
     display: block;
-}
-
-.dropdown-item {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  .dropdown-item {
     padding: 0.5rem 1.25rem;
     font-size: 0.9rem;
     color: var(--dark);
@@ -166,89 +166,84 @@ header {
     width: 100%;
     text-align: left;
     cursor: pointer;
-}
-
-.dropdown-item:hover {
-    background-color: var(--gray-light);
-    color: var(--primary);
-}
-
-.dropdown-divider {
+  }
+  
+  .dropdown-item:hover {
+    background-color: var(--gray-medium);
+    color: var(--secondary);
+  }
+  
+  .dropdown-divider {
     border-top: 1px solid var(--gray-medium);
     margin: 0.25rem 0;
-}
-
-/* Main Content Container */
-main.container {
+  }
+  
+  /* Main Content Container */
+  main.container {
     max-width: 1200px;
     border-radius: 0.75rem;
     padding: 2rem;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-    margin-left: auto;
-    margin-right: auto;
-    background-color: var(--card-bg); /* Apply card background to main container */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Add subtle shadow */
-}
-
-/* Messages/Alerts (Basic styling, needs Angular implementation) */
-.messages {
+    margin: 2rem auto;
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Messages/Alerts */
+  .messages {
     margin-bottom: 1.5rem;
-}
-
-.alert {
+  }
+  
+  .alert {
     border-radius: 0.5rem;
     padding: 0.75rem 1.25rem;
     border: none;
     margin-bottom: 1rem;
-}
-
-.alert-success {
-    background-color: rgba(80, 227, 194, 0.1); /* Using secondary color with opacity */
+  }
+  
+  .alert-success {
+    background-color: rgba(0, 188, 212, 0.15);
     color: var(--secondary);
-}
-
-.alert-danger {
-    background-color: rgba(240, 80, 80, 0.1); /* Using danger color with opacity */
+  }
+  
+  .alert-danger {
+    background-color: rgba(229, 57, 53, 0.15);
     color: var(--danger);
-}
-
-.alert .btn-close {
-    /* Style for close button if needed */
-}
-
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
     header {
-        padding: 1rem;
+      padding: 1rem;
     }
+  
     .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
     }
-
+  
     .nav-links {
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
     }
-
+  
     main.container {
-        padding: 1.5rem;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
+      padding: 1.5rem;
+      margin: 1rem auto;
     }
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.dropdown-menu.show {
-    animation: fadeIn 0.2s ease-out;
-}
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

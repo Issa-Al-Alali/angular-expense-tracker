@@ -5,6 +5,7 @@ import { LayoutComponent } from './layout/layout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AuthGuard } from './auth.guard'; // Import the AuthGuard
 import { IncomeComponent } from './income/income.component'; // Import the IncomeComponent
+import { ExpensesComponent } from './expenses/expenses.component'; // Import the ExpensesComponent
 
 export const routes: Routes = [
   // 1. Default redirect for the initial load: Redirect the root path ('') to the register page.
@@ -35,7 +36,8 @@ export const routes: Routes = [
       // Optional: Redirect from the root of the authenticated section ('/') to the dashboard
       // This path is matched *after* the public routes and the initial redirect.
       // It ensures that if an authenticated user navigates to '/', they land on the dashboard.
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'expenses', component: ExpensesComponent },
     ]
   },
 
