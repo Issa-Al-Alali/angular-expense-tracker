@@ -6,16 +6,55 @@ import { ExpenseService, Expense, Category, ExpenseSummary } from '../expense.se
 import { AuthService, IncomeData, ErrorResponse } from '../auth.service';
 import { Observable, Subscription, combineLatest, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { Chart, ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
-declare const jsPDF: any;
-declare global {
-  interface Window {
-    jspdf: {
-      jsPDF: typeof jsPDF;
-    };
-  }
-}
+
+// Import Chart.js and necessary components
+import {
+  Chart,
+  ChartConfiguration,
+  ChartOptions,
+  ChartType,
+  registerables, // Import registerables to easily register all components
+  LinearScale, // Explicitly import LinearScale
+  CategoryScale, // Explicitly import CategoryScale
+  BarElement, // Explicitly import BarElement
+  Title, // Explicitly import Title
+  Tooltip, // Explicitly import Tooltip
+  Legend, // Explicitly import Legend
+  BarController // Explicitly import BarController
+} from 'chart.js';
+
+// Register Chart.js components
+Chart.register(
+  LinearScale,
+  CategoryScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarController
+);
+// Alternatively, use Chart.register(...registerables); to register all
+// Chart.register(...registerables);
+
+
+// Import jsPDF directly from jspdf
+import jsPDF from 'jspdf';
+// Import jspdf-autotable. This import is often enough to attach the plugin.
+import 'jspdf-autotable';
+
+
+// Declare bootstrap if still using CDN for its JS features like modals
 declare const bootstrap: any;
+
+// *** Added: Interface for monthlyData in PDF generation ***
+interface MonthlySummaryRow {
+    month: string;
+    income: string;
+    spending: string;
+    remaining: string;
+    isNegative: boolean;
+}
+
 
 @Component({
   selector: 'app-expenses',
@@ -101,9 +140,6 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.fetchUserIncome();
 
     // Subscribe to route query parameters to update filters and fetch data
-    // NOTE: We keep this subscription to initialize the form and data on first load
-    // and when navigating to the page with existing query params.
-    // Filter form changes will now trigger a full reload instead of just refetching data.
     const routeSubscription = this.route.queryParams.subscribe(params => {
       this.filterForm.patchValue({
         year: params['year'] || '',
@@ -115,13 +151,22 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.fetchExpenses();
       const activeChartBtn = document.querySelector('.chart-type-btn.active');
       this.currentChartType = (activeChartBtn?.getAttribute('data-type') as 'monthly' | 'category') || 'monthly';
+      // Fetch chart data after filters are applied from query params
       this.fetchChartData(this.currentChartType);
     });
     this.subscriptions.push(routeSubscription);
 
-     // *** REMOVED: Subscription to filterForm.valueChanges ***
-     // This subscription is removed because filter changes will now trigger a full page reload
-     // via the onFilterSubmit method, which is bound to the form's submit event.
+     // Subscription to filter form value changes (kept for chart updates when filters change)
+     const filterFormSubscription = this.filterForm.valueChanges.pipe(
+        debounceTime(500),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+     ).subscribe(filters => {
+        console.log('Filter form value changed:', filters);
+        // Fetch expenses and update chart based on the new filters
+        this.fetchExpenses();
+        this.fetchChartData(this.currentChartType); // Update chart with new filters
+     });
+     this.subscriptions.push(filterFormSubscription);
   }
 
   ngAfterViewInit(): void {
@@ -131,13 +176,31 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('Edit modal was hidden.');
     });
      console.log('ngAfterViewInit completed. Edit modal hidden listener attached.');
+
+     // Initial chart render after view is initialized
+     // We moved the initial fetchChartData call into the routeSubscription
+     // to ensure filters from the URL are applied first.
+     // However, we can still add a check here to render an empty chart initially
+     // if no year is set, preventing the "Canvas element not found" error on first load.
+     if (!this.filterForm.value.year) {
+         this.renderChart('monthly', { labels: [], data: [] });
+     }
+
+
+     // Log library availability after view init
+     console.log('Chart.js available:', typeof Chart !== 'undefined');
+     console.log('jsPDF available:', typeof jsPDF !== 'undefined');
+     console.log('jsPDF autoTable plugin available:', typeof (jsPDF as any).autoTable !== 'undefined');
   }
 
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    // Destroy the chart instance when the component is destroyed
     if (this.expenseChart) {
+      console.log('Destroying chart instance in ngOnDestroy.');
       this.expenseChart.destroy();
+      this.expenseChart = undefined; // Set to undefined after destroying
     }
   }
 
@@ -193,7 +256,12 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  /**
+   * Fetches data for the expense chart based on the selected type and filters.
+   * @param type - The type of chart data to fetch ('monthly' or 'category').
+   */
   fetchChartData(type: 'monthly' | 'category'): void {
+      console.log(`Fetching ${type} chart data...`);
       this.isLoadingChart = true;
       this.fetchChartError = null;
 
@@ -205,7 +273,8 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
           if (!year) {
               this.fetchChartError = 'Please select a year to view monthly expenses chart.';
               this.isLoadingChart = false;
-              this.renderChart(type, { labels: [], data: [] });
+              this.renderChart(type, { labels: [], data: [] }); // Render empty chart with message
+              console.log('Monthly chart data fetch skipped: Year not selected.');
               return;
           }
           chartDataObservable = this.expenseService.getMonthlySummary(year);
@@ -220,13 +289,17 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
           catchError(error => {
               this.fetchChartError = error.message || `Failed to load ${type} chart data.`;
               this.isLoadingChart = false;
-              console.error(`Fetch ${type} chart data error:`, error);
-              this.renderChart(type, { labels: [], data: [] });
+              console.error(`Error fetching ${type} chart data:`, error);
+              this.renderChart(type, { labels: [], data: [] }); // Render empty chart on error
               return of(null);
           })
       ).subscribe(data => {
+          console.log(`Received ${type} chart data:`, data);
           if (data) {
               this.renderChart(type, data);
+          } else {
+               // Handle case where API returns success but no data (e.g., empty labels/data)
+               this.renderChart(type, { labels: [], data: [] });
           }
           this.isLoadingChart = false;
       });
@@ -234,21 +307,50 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
   renderChart(type: 'monthly' | 'category', chartData: ExpenseSummary): void {
-    if (!this.expenseChartCanvas) {
-        console.error('Chart canvas element not found.');
+    console.log(`Rendering ${type} chart with data:`, chartData);
+    // *** Added check for nativeElement and a small delay ***
+    if (!this.expenseChartCanvas || !this.expenseChartCanvas.nativeElement) {
+        console.error('Chart canvas element or nativeElement not found.');
+        this.isLoadingChart = false; // Ensure loading is false if element is missing
+        // Retry rendering after a short delay if element is not found
+        setTimeout(() => this.renderChart(type, chartData), 100);
         return;
     }
 
     const chartCtx = this.expenseChartCanvas.nativeElement.getContext('2d');
     if (!chartCtx) {
         console.error('Could not get 2D context for chart canvas.');
+        this.isLoadingChart = false; // Ensure loading is false if context is missing
         return;
     }
 
+    // Clear the canvas before drawing a new chart
+    chartCtx.clearRect(0, 0, chartCtx.canvas.width, chartCtx.canvas.height);
+
+
+    // Destroy existing chart if it exists
     if (this.expenseChart) {
+      console.log('Destroying existing chart instance.');
       this.expenseChart.destroy();
+      this.expenseChart = undefined; // Set to undefined after destroying
     }
 
+     // Display message if no data
+     if (!chartData.labels || chartData.labels.length === 0 || !chartData.data || chartData.data.length === 0) {
+         chartCtx.font = '16px Arial';
+         chartCtx.textAlign = 'center';
+         chartCtx.fillStyle = '#6c757d'; // Bootstrap muted text color
+         const message = type === 'monthly' && !this.filterForm.value.year
+             ? 'Please select a year to view monthly expenses'
+             : 'No data available for the selected filters';
+         chartCtx.fillText(message, chartCtx.canvas.width / 2, chartCtx.canvas.height / 2);
+         this.isLoadingChart = false; // Ensure loading is false
+         console.log('Rendering empty chart with message:', message);
+         return; // Stop here if no data
+     }
+
+
+    // Determine background colors
     const backgroundColor = type === 'monthly'
         ? chartData.data.map(amount => {
              if (this.currentIncome && this.currentIncome.budget_amount) {
@@ -271,7 +373,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
     const chartConfig: ChartConfiguration = {
-      type: 'bar',
+      type: 'bar', // Using 'bar' type
       data: {
         labels: chartData.labels,
         datasets: [{
@@ -321,6 +423,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
     };
 
     this.expenseChart = new Chart(chartCtx, chartConfig);
+    console.log('Chart rendered successfully.');
   }
 
   generateCategoryColors(count: number, alpha: number): string[] {
@@ -335,8 +438,9 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
   onChartTypeChange(type: 'monthly' | 'category'): void {
+      console.log('Chart type changed to:', type);
       this.currentChartType = type;
-      this.fetchChartData(this.currentChartType); // Ensure this calls with updated type
+      this.fetchChartData(this.currentChartType);
   }
 
 
@@ -353,19 +457,13 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
        if (filters.category_name) queryParams['category_name'] = filters.category_name;
        if (filters.sort) queryParams['sort'] = filters.sort;
 
-       // Construct the new URL with updated query parameters
        const urlTree = this.router.createUrlTree([], {
            relativeTo: this.route,
            queryParams: queryParams,
-           queryParamsHandling: 'merge' // Merge with existing query params
+           queryParamsHandling: 'merge'
        });
 
-       // Navigate to the new URL, which will trigger a full page reload
-       // by default when the route changes with different query parameters.
-       // Alternatively, use window.location.reload() for a guaranteed full refresh.
-       // Let's use window.location.href for a clear full page reload.
        window.location.href = this.router.serializeUrl(urlTree);
-       // Or simply: window.location.reload();
   }
 
   /**
@@ -380,9 +478,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       category_name: '',
       sort: ''
     });
-    // Trigger a full page reload to clear all query parameters from the URL
-    window.location.href = this.router.url.split('?')[0]; // Navigate to base URL without query params
-    // Or simply: window.location.reload();
+    window.location.href = this.router.url.split('?')[0];
   }
 
   onAddExpenseSubmit(): void {
@@ -391,7 +487,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.addExpenseApiErrors = null;
 
       const formData = this.addExpenseForm.value;
-      const receiptFile: File | undefined = formData.receipt || undefined;
+      const receiptFile: File | null = formData.receipt;
 
       const expenseDataForService = {
           amount: formData.amount,
@@ -421,11 +517,11 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
           }
       }
 
+      // *** Updated: Pass receiptFile as File | null | undefined ***
       this.expenseService.addExpense(expenseDataForService, categoryName, categoryId, receiptFile).subscribe({
         next: (response) => {
           console.log('Expense added successfully', response);
           this.closeModal(this.addExpenseModal);
-          // *** Added: Full page reload after successful add ***
           window.location.reload();
         },
         error: (error) => {
@@ -539,7 +635,6 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (response) => {
           console.log('Expense updated successfully', response);
           this.closeModal(this.editExpenseModal);
-          // *** Added: Full page reload after successful edit ***
           window.location.reload();
         },
         error: (error) => {
@@ -564,7 +659,6 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.expenseService.deleteExpense(expenseId).subscribe({
         next: (response) => {
           console.log('Expense deleted successfully', response);
-          // *** Added: Full page reload after successful delete ***
           window.location.reload();
         },
         error: (error) => {
@@ -592,32 +686,41 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   downloadYearlyPDF(): void {
+      console.log('Attempting to generate yearly PDF.');
       const year = this.filterForm.value.year;
       if (!year || !/^\d{4}$/.test(year)) {
           alert('Please enter a valid 4-digit year in the filter to generate the yearly summary.');
+          console.log('PDF generation skipped: Invalid year filter.');
           return;
       }
 
-      if (typeof jsPDF === 'undefined' || typeof jsPDF.jsPDF === 'undefined' || typeof (jsPDF.jsPDF.prototype as any).autoTable !== 'function') {
-          console.error('jsPDF or AutoTable plugin not properly loaded.');
-          alert('PDF generation failed: Required libraries not loaded.');
-          return;
+      // Check if jsPDF and autoTable are loaded by checking the imported objects/methods
+      // We check for the autoTable method's existence on the jsPDF prototype
+      if (typeof jsPDF === 'undefined' || typeof (jsPDF.prototype as any).autoTable !== 'function') {
+           console.error('jsPDF or AutoTable plugin not properly loaded after import.');
+           alert('PDF generation failed: Required libraries not loaded correctly.');
+           return;
       }
+      console.log('jsPDF and autoTable appear to be loaded.');
+
 
       alert('Generating PDF...');
 
       this.expenseService.getMonthlySummary(year).subscribe({
           next: (expenseData) => {
+              console.log('Received monthly summary data for PDF:', expenseData);
               try {
-                  const { jsPDF } = window.jspdf;
+                  // Use the imported jsPDF
                   const doc = new jsPDF();
 
                   const monthlyIncome = this.currentIncome ? parseFloat(this.currentIncome.budget_amount) : 0;
 
-                  const monthlyData: { month: string; income: string; spending: string; remaining: string; isNegative: boolean }[] = [];
+                  // *** Added: Explicit type annotation for monthlyData ***
+                  const monthlyData: MonthlySummaryRow[] = [];
                   let totalSpending = 0;
 
                   if (!expenseData.labels || !expenseData.data || expenseData.labels.length === 0) {
+                     console.warn('No expense data available for PDF generation for year:', year);
                      throw new Error('No expense data available for the selected year');
                   }
 
@@ -646,6 +749,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
                   doc.setFontSize(12);
                   doc.text('Monthly Breakdown:', 14, 35);
 
+                  // Use autoTable method directly on the jsPDF instance
                   (doc as any).autoTable({
                       startY: 40,
                       head: [['Month', 'Income', 'Spending', 'Remaining']],
@@ -726,9 +830,10 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
                   doc.text(`Generated on: ${today.toLocaleDateString()}`, 14, doc.internal.pageSize.height - 10);
 
                   doc.save(`Expense_Summary_${year}.pdf`);
+                  console.log('PDF generated successfully.');
 
               } catch (error: any) {
-                  console.error('Error generating PDF:', error);
+                  console.error('Error during PDF generation:', error);
                   alert('Error generating PDF: ' + error.message);
               } finally {
               }

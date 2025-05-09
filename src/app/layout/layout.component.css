@@ -27,7 +27,7 @@
   
   /* Header Styling */
   header {
-    background-color: var(--card-bg);
+    background-color: white;
     color: var(--dark);
     padding: 1rem 2rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
@@ -38,6 +38,7 @@
   }
   
   .navbar {
+    background-color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;

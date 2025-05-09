@@ -24,6 +24,7 @@ export interface Category {
   // Add other category fields if your API returns them
 }
 
+// Interface matching the summary API response structure
 export interface ExpenseSummary {
     labels: string[]; // e.g., Month names or Category names
     data: number[]; // Corresponding expense amounts
@@ -110,8 +111,10 @@ export class ExpenseService {
     // Construct the GET URL using the user ID
     const url = `${this.apiUrl}/expenses/${userId}/`;
 
+    console.log('Fetching expenses with URL:', url, 'and params:', params.toString());
+
     return this.http.get<Expense[]>(url, { headers, params }).pipe(
-      tap(response => console.log('Fetched expenses:', response)),
+      tap(response => console.log('Fetched expenses successfully')),
       catchError(error => {
         console.error('Error fetching expenses:', error);
         return throwError(() => error);
@@ -120,10 +123,10 @@ export class ExpenseService {
   }
 
   /**
-   * Fetches monthly expense summary data for charting.
-   * GET: /expenses/{user_id}/monthly-summary/
+   * Fetches monthly expense summary data for charting and PDF generation.
+   * GET: http://localhost:8000/expenses/{user_id}/monthly-summary?year={year}
    * @param year - The year for the summary.
-   * @returns An Observable with ExpenseSummary data.
+   * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
    */
   getMonthlySummary(year: string): Observable<ExpenseSummary> {
      const headers = this.getAuthHeaders();
@@ -134,10 +137,13 @@ export class ExpenseService {
      }
 
      const params = new HttpParams().set('year', year);
+     // Using the provided API endpoint structure
      const url = `${this.apiUrl}/expenses/${userId}/monthly-summary/`;
 
+     console.log('Fetching monthly summary with URL:', url, 'and params:', params.toString());
+
      return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
-       tap(response => console.log('Fetched monthly summary:', response)),
+       tap(response => console.log('Fetched monthly summary successfully')),
        catchError(error => {
          console.error('Error fetching monthly summary:', error);
          return throwError(() => error);
@@ -147,9 +153,10 @@ export class ExpenseService {
 
    /**
    * Fetches category expense summary data for charting.
-   * GET: /expenses/{user_id}/category-summary/
+   * GET: http://localhost:8000/expenses/{user_id}/category-summary
+   * (Optional query params year, category_name based on previous implementation)
    * @param filters - Optional query parameters (year, category_name).
-   * @returns An Observable with ExpenseSummary data.
+   * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
    */
   getCategorySummary(filters?: { year?: string, category_name?: string }): Observable<ExpenseSummary> {
      const headers = this.getAuthHeaders();
@@ -165,10 +172,13 @@ export class ExpenseService {
         if (filters.category_name) params = params.set('category_name', filters.category_name);
      }
 
+     // Using the provided API endpoint structure
      const url = `${this.apiUrl}/expenses/${userId}/category-summary/`;
 
+     console.log('Fetching category summary with URL:', url, 'and params:', params.toString());
+
      return this.http.get<ExpenseSummary>(url, { headers, params }).pipe(
-       tap(response => console.log('Fetched category summary:', response)),
+       tap(response => console.log('Fetched category summary successfully')),
        catchError(error => {
          console.error('Error fetching category summary:', error);
          return throwError(() => error);
@@ -179,15 +189,15 @@ export class ExpenseService {
 
   /**
    * Adds a new expense.
-   * POST: /expenses/add/{user_id}/{category_name}/
+   * POST: http://localhost:8000/expenses/add/{user_id}/{category_name}/
    * Handles both JSON data and FormData for file uploads.
    * @param expenseData - The expense data (amount, description, date, location).
    * @param categoryName - The name of the category (required for the URL).
    * @param categoryId - The ID of the category (required in the body based on PUT example).
-   * @param receiptFile - Optional receipt file (PDF).
+   * @param receiptFile - Optional receipt file (PDF). *** Updated type to accept File | null | undefined ***
    * @returns An Observable with the AddExpenseResponse.
    */
-  addExpense(expenseData: { amount: number, description: string, expense_date: string, location: string }, categoryName: string, categoryId: string, receiptFile?: File): Observable<AddExpenseResponse> {
+  addExpense(expenseData: { amount: number, description: string, expense_date: string, location: string }, categoryName: string, categoryId: string, receiptFile?: File | null): Observable<AddExpenseResponse> {
     const token = this.authService.getToken();
     const userId = this.authService.getUserId();
 
@@ -204,7 +214,7 @@ export class ExpenseService {
 
     let body: FormData | any;
 
-    if (receiptFile) {
+    if (receiptFile) { // Check if receiptFile is not null or undefined
         // Use FormData for file upload (handles multipart/form-data)
         body = new FormData();
         body.append('amount', expenseData.amount.toString()); // Convert number to string for FormData
@@ -246,7 +256,7 @@ export class ExpenseService {
 
   /**
    * Updates an existing expense.
-   * PUT: /expenses/update/{expense_id}/
+   * PUT: http://localhost:8000/expenses/update/{expense_id}/
    * @param expenseId - The ID of the expense to update.
    * @param updateData - The updated expense data.
    * @returns An Observable with the UpdateExpenseResponse.
@@ -270,7 +280,7 @@ export class ExpenseService {
 
   /**
    * Deletes an expense.
-   * DELETE: /expenses/delete/{expense_id}/
+   * DELETE: http://localhost:8000/expenses/delete/{expense_id}/
    * @param expenseId - The ID of the expense to delete.
    * @returns An Observable with the DeleteExpenseResponse.
    */
@@ -291,7 +301,7 @@ export class ExpenseService {
 
   /**
    * Fetches the list of expense categories.
-   * GET: /categories/ (Assuming a categories endpoint exists)
+   * GET: http://localhost:8000/categories/ (Assuming a categories endpoint exists)
    * @returns An Observable with an array of Category objects.
    */
   getCategories(): Observable<Category[]> {
@@ -299,10 +309,10 @@ export class ExpenseService {
       // Assuming a categories endpoint exists at /categories/
       const url = `${this.apiUrl}/categories/`;
 
-      console.log('Fetch Categories Request URL:', url);
+      console.log('Fetching Categories Request URL:', url);
 
       return this.http.get<Category[]>(url, { headers }).pipe(
-          tap(response => console.log('Fetched categories:', response)),
+          tap(response => console.log('Fetched categories successfully')),
           catchError(error => {
               console.error('Error fetching categories:', error);
               return throwError(() => error);
