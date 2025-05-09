@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service'; // Import AuthService to get the token and user ID
+import { ErrorResponse } from './auth.service'; // Import ErrorResponse from AuthService
 
 // Define interfaces for API data structures
 
@@ -30,12 +31,24 @@ export interface ExpenseSummary {
 
 export interface AddExpenseResponse {
   id: string;
-  // Include other fields returned on successful creation
+  expense_date: string;
+  category: string; // Category ID
+  category_name: string;
+  description: string;
+  amount: string;
+  location: string | null;
+  receipt: string | null;
 }
 
 export interface UpdateExpenseResponse {
   id: string;
-  // Include other fields returned on successful update
+  expense_date: string;
+  category: string; // Category ID
+  category_name: string;
+  description: string;
+  amount: string;
+  location: string | null;
+  receipt: string | null;
 }
 
 export interface DeleteExpenseResponse {
@@ -61,7 +74,6 @@ export class ExpenseService {
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
-      // Handle missing token - perhaps redirect to login or throw a specific error
       console.error('Authentication token not found. Cannot make authenticated request.');
       return new HttpHeaders({
         'Content-Type': 'application/json'
@@ -169,11 +181,13 @@ export class ExpenseService {
    * Adds a new expense.
    * POST: /expenses/add/{user_id}/{category_name}/
    * Handles both JSON data and FormData for file uploads.
-   * @param expenseData - The expense data (amount, description, date, location, category ID).
+   * @param expenseData - The expense data (amount, description, date, location).
+   * @param categoryName - The name of the category (required for the URL).
+   * @param categoryId - The ID of the category (required in the body based on PUT example).
    * @param receiptFile - Optional receipt file (PDF).
    * @returns An Observable with the AddExpenseResponse.
    */
-  addExpense(expenseData: { amount: number, description: string, expense_date: string, location: string, category: string }, receiptFile?: File): Observable<AddExpenseResponse> {
+  addExpense(expenseData: { amount: number, description: string, expense_date: string, location: string }, categoryName: string, categoryId: string, receiptFile?: File): Observable<AddExpenseResponse> {
     const token = this.authService.getToken();
     const userId = this.authService.getUserId();
 
@@ -181,38 +195,7 @@ export class ExpenseService {
       return throwError(() => new Error('Authentication token or User ID not found. Cannot add expense.'));
     }
 
-    // The API endpoint includes user_id and category_name in the URL
-    // We need the category name based on the provided category ID.
-    // In a real app, you might fetch categories first or have a mapping.
-    // For now, let's assume we can get the category name from the provided category ID.
-    // This might require fetching categories first or adjusting the backend API.
-    // Assuming the backend handles mapping category ID to name internally based on the ID sent in the body.
-    // Let's adjust the URL to just include user_id, and send category ID in the body as per PUT example.
-    // If the API truly requires category_name in the URL for POST, we'd need the category name.
-    // Based on the POST example: POST /expenses/add/{user_id}/{category_name}/
-    // We need the category name. Let's assume we can get it from the category ID provided in expenseData.category
-
-    // **Correction based on POST API example:** The API expects category_name in the URL.
-    // This means the component needs to provide the category name, not just the ID.
-    // This implies the component will need to fetch categories first to get the name from the ID.
-    // Let's adjust the method signature and logic to accept categoryName.
-
-    // **Revised addExpense method signature and logic:**
-    // We need the category name to build the URL. Let's assume the component passes both ID and Name.
-    // Or, fetch categories here first to get the name from the ID. Fetching categories here might be inefficient.
-    // It's better for the component to have the category name available (e.g., from a prior fetch).
-
-    // Let's assume the component provides the category name.
-    // **Further Correction:** The POST API example shows category_name in the URL, but the response includes category ID.
-    // This is a bit inconsistent. Let's assume the POST body should contain the category ID, and the URL includes the user ID.
-    // The API example URL `/expenses/add/{user_id}/{category_name}/` seems to imply category_name in the URL.
-    // Let's stick to the provided API example structure for now, assuming the component can provide the category name.
-
-    // **Final approach based on provided API example:** The POST URL is `/expenses/add/{user_id}/{category_name}/`.
-    // The body contains amount, description, expense_date, location.
-    // The receipt is sent as FormData.
-
-    const categoryName = expenseData.category; // Assuming expenseData.category is the category name string
+    // Construct the POST URL using user_id and category_name as per your API example
     const url = `${this.apiUrl}/expenses/add/${userId}/${encodeURIComponent(categoryName)}/`;
 
     let headers = new HttpHeaders({
@@ -222,24 +205,18 @@ export class ExpenseService {
     let body: FormData | any;
 
     if (receiptFile) {
-        // Use FormData for file upload
+        // Use FormData for file upload (handles multipart/form-data)
         body = new FormData();
         body.append('amount', expenseData.amount.toString()); // Convert number to string for FormData
         body.append('description', expenseData.description);
         body.append('expense_date', expenseData.expense_date);
         body.append('location', expenseData.location);
-        // Note: The API example POST body didn't explicitly include category ID,
-        // but the URL includes category_name. Let's add category ID to the body
-        // as it's in the PUT example and likely needed by the backend.
-        body.append('category', expenseData.category); // Assuming expenseData.category is the category ID here
-
+        body.append('category', categoryId); // Include category ID in FormData body
         body.append('receipt', receiptFile, receiptFile.name);
 
-        // When using FormData, HttpClient automatically sets the Content-Type to multipart/form-data
-        // and includes the boundary, so we don't set Content-Type header manually.
+        // No need to set Content-Type: 'multipart/form-data' manually with FormData
         headers = new HttpHeaders({
              'Authorization': `Token ${token}`,
-             // 'Content-Type': 'multipart/form-data' // Do NOT set this manually with FormData
         });
 
     } else {
@@ -249,11 +226,13 @@ export class ExpenseService {
             description: expenseData.description,
             expense_date: expenseData.expense_date,
             location: expenseData.location,
-            category: expenseData.category // Assuming expenseData.category is the category ID here
+            category: categoryId // Include category ID in JSON body
         };
         headers = this.getAuthHeaders(); // Uses 'application/json'
     }
 
+    console.log('Add Expense Request URL:', url);
+    console.log('Add Expense Request Body:', body);
 
     return this.http.post<AddExpenseResponse>(url, body, { headers }).pipe(
       tap(response => console.log('Expense added successfully', response)),
@@ -277,6 +256,9 @@ export class ExpenseService {
     const url = `${this.apiUrl}/expenses/update/${expenseId}/`;
     const body = updateData; // The updateData object should match the expected API format
 
+    console.log('Update Expense Request URL:', url);
+    console.log('Update Expense Request Body:', body);
+
     return this.http.put<UpdateExpenseResponse>(url, body, { headers }).pipe(
       tap(response => console.log('Expense updated successfully', response)),
       catchError(error => {
@@ -296,6 +278,8 @@ export class ExpenseService {
     const headers = this.getAuthHeaders();
     const url = `${this.apiUrl}/expenses/delete/${expenseId}/`;
 
+    console.log('Delete Expense Request URL:', url);
+
     return this.http.delete<DeleteExpenseResponse>(url, { headers }).pipe(
       tap(response => console.log('Expense deleted successfully', response)),
       catchError(error => {
@@ -314,6 +298,8 @@ export class ExpenseService {
       const headers = this.getAuthHeaders();
       // Assuming a categories endpoint exists at /categories/
       const url = `${this.apiUrl}/categories/`;
+
+      console.log('Fetch Categories Request URL:', url);
 
       return this.http.get<Category[]>(url, { headers }).pipe(
           tap(response => console.log('Fetched categories:', response)),

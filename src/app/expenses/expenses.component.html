@@ -173,7 +173,7 @@
                         <label for="location" class="form-label">Location</label>
                          <input type="text" class="form-control" id="location" formControlName="location">
                          <div *ngIf="addExpenseApiErrors?.['location']" class="error-message">
-                             <p *ngFor="let error of addExpenseApiErrors?.['location'] || []">{{ error }}</p>
+                             <p *ngFor="let error of addExpenseApiErrors?.['location']">{{ error }}</p>
                          </div>
                     </div>
                     <div class="mb-3">
@@ -192,7 +192,7 @@
                         <label for="receipt" class="form-label">Receipt (PDF only)</label>
                          <input type="file" class="form-control" id="receipt" accept=".pdf" (change)="onReceiptFileSelect($event)">
                          <div *ngIf="addExpenseApiErrors?.['receipt']" class="error-message">
-                             <p *ngFor="let error of addExpenseApiErrors?.['receipt'] || []">{{ error }}</p>
+                             <p *ngFor="let error of addExpenseApiErrors?.['receipt']">{{ error }}</p>
                          </div>
                     </div>
                 </div>
@@ -218,7 +218,7 @@
                  <input type="hidden" formControlName="id">
                 <div class="modal-body">
                     <div *ngIf="editExpenseApiErrors?.non_field_errors" class="error-message">
-                        <p *ngFor="let error of editExpenseApiErrors?.non_field_errors || []">{{ error }}</p>
+                        <p *ngFor="let error of editExpenseApiErrors?.non_field_errors">{{ error }}</p>
                     </div>
                     <div class="mb-3">
                         <label for="edit_amount" class="form-label">Amount</label>
@@ -228,7 +228,7 @@
                              <div *ngIf="editExpenseForm.get('amount')?.errors?.['min']">Amount must be greater than 0.</div>
                          </div>
                          <div *ngIf="editExpenseApiErrors?.['amount']" class="error-message">
-                             <p *ngFor="let error of editExpenseApiErrors?.['amount'] || []">{{ error }}</p>
+                             <p *ngFor="let error of editExpenseApiErrors?.['amount']">{{ error }}</p>
                          </div>
                     </div>
                     <div class="mb-3">
@@ -238,7 +238,7 @@
                             <div *ngIf="editExpenseForm.get('description')?.errors?.['required']">Description is required.</div>
                          </div>
                          <div *ngIf="editExpenseApiErrors?.['description']" class="error-message">
-                             <p *ngFor="let error of editExpenseApiErrors?.['description'] || []">{{ error }}</p>
+                             <p *ngFor="let error of editExpenseApiErrors?.['description']">{{ error }}</p>
                          </div>
                     </div>
                     <div class="mb-3">
@@ -248,14 +248,14 @@
                             <div *ngIf="editExpenseForm.get('expense_date')?.errors?.['required']">Date is required.</div>
                          </div>
                          <div *ngIf="editExpenseApiErrors?.['expense_date']" class="error-message">
-                             <p *ngFor="let error of editExpenseApiErrors?.['expense_date'] || []">{{ error }}</p>
+                             <p *ngFor="let error of editExpenseApiErrors?.['expense_date']">{{ error }}</p>
                          </div>
                     </div>
                     <div class="mb-3">
                         <label for="edit_location" class="form-label">Location</label>
                          <input type="text" class="form-control" id="edit_location" formControlName="location">
                          <div *ngIf="editExpenseApiErrors?.['location']" class="error-message">
-                             <p *ngFor="let error of editExpenseApiErrors?.['location'] || []">{{ error }}</p>
+                             <p *ngFor="let error of editExpenseApiErrors?.['location']">{{ error }}</p>
                          </div>
                     </div>
                     <div class="mb-3">
@@ -267,7 +267,7 @@
                             <div *ngIf="editExpenseForm.get('category')?.errors?.['required']">Category is required.</div>
                          </div>
                          <div *ngIf="editExpenseApiErrors?.['category']" class="error-message">
-                             <p *ngFor="let error of editExpenseApiErrors?.['category'] || []">{{ error }}</p>
+                             <p *ngFor="let error of editExpenseApiErrors?.['category']">{{ error }}</p>
                          </div>
                     </div>
                      </div>

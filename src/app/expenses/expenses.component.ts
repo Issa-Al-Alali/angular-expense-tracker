@@ -1,26 +1,30 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and Router
-// Corrected import: Import ErrorResponse from '../auth.service'
-import { ExpenseService, Expense, Category, ExpenseSummary } from '../expense.service'; // Import ExpenseService and interfaces
-import { AuthService, IncomeData, ErrorResponse } from '../auth.service'; // Import AuthService, IncomeData, and ErrorResponse
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ExpenseService, Expense, Category, ExpenseSummary } from '../expense.service';
+import { AuthService, IncomeData, ErrorResponse } from '../auth.service';
 import { Observable, Subscription, combineLatest, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { Chart, ChartConfiguration, ChartOptions, ChartType } from 'chart.js'; // Import Chart.js types
-// Import jsPDF and jspdf-autotable
-import jsPDF from 'jspdf'; // Import jsPDF directly
-import 'jspdf-autotable';
-declare const bootstrap: any; // Assuming Bootstrap JS is loaded globally
+import { Chart, ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
+declare const jsPDF: any;
+declare global {
+  interface Window {
+    jspdf: {
+      jsPDF: typeof jsPDF;
+    };
+  }
+}
+declare const bootstrap: any;
 
 @Component({
   selector: 'app-expenses',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule], // Import necessary modules
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './expenses.component.html',
-  styleUrls: ['./expenses.component.css'] // Link to the CSS file
+  styleUrls: ['./expenses.component.css']
 })
-export class ExpensesComponent implements OnInit, OnDestroy {
+export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Forms
   filterForm!: FormGroup;
@@ -28,9 +32,9 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   editExpenseForm!: FormGroup;
 
   // Data
-  expenses: Expense[] = []; // Array to hold fetched expenses
-  categories: Category[] = []; // Array to hold fetched categories
-  currentIncome: IncomeData | null = null; // To store user's income for comparison
+  expenses: Expense[] = [];
+  categories: Category[] = [];
+  currentIncome: IncomeData | null = null;
 
   // Loading/Error States
   isLoadingExpenses = false;
@@ -42,8 +46,8 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   fetchExpensesError: string | null = null;
   fetchCategoriesError: string | null = null;
   fetchChartError: string | null = null;
-  addExpenseApiErrors: ErrorResponse | null = null; // For add modal
-  editExpenseApiErrors: ErrorResponse | null = null; // For edit modal
+  addExpenseApiErrors: ErrorResponse | null = null;
+  editExpenseApiErrors: ErrorResponse | null = null;
 
   // Modals
   @ViewChild('addExpenseModal') addExpenseModal!: ElementRef;
@@ -60,47 +64,47 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private expenseService: ExpenseService,
-    private authService: AuthService, // Inject AuthService
-    private route: ActivatedRoute, // Inject ActivatedRoute to read query params
-    private router: Router // Inject Router for navigation/URL manipulation
+    private authService: AuthService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
     // Initialize forms
     this.filterForm = this.fb.group({
-      year: ['', [Validators.pattern(/^\d{4}$/)]], // Optional year, validate format
-      month: ['', [Validators.min(1), Validators.max(12)]], // Optional month, validate range
-      category_name: [''], // Optional category name
-      sort: [''] // Optional sort order
+      year: ['', [Validators.pattern(/^\d{4}$/)]],
+      month: ['', [Validators.min(1), Validators.max(12)]],
+      category_name: [''],
+      sort: ['']
     });
 
     this.addExpenseForm = this.fb.group({
-      amount: ['', [Validators.required, Validators.min(0.01)]], // Amount required, min 0.01
-      description: ['', Validators.required], // Description required
-      expense_date: ['', Validators.required], // Date required
-      location: [''], // Location optional
-      category: ['', Validators.required], // Category ID required
-      receipt: [null] // Receipt file (will handle separately)
-    });
-
-    this.editExpenseForm = this.fb.group({
-      id: ['', Validators.required], // Expense ID (hidden)
       amount: ['', [Validators.required, Validators.min(0.01)]],
       description: ['', Validators.required],
       expense_date: ['', Validators.required],
       location: [''],
       category: ['', Validators.required],
-      // Receipt handling for edit is more complex (displaying existing, uploading new)
-      // We'll handle this separately or simplify for now.
+      receipt: [null]
     });
 
-    // Fetch categories and user income first, as they are needed for the forms and logic
+    this.editExpenseForm = this.fb.group({
+      id: ['', Validators.required],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
+      description: ['', Validators.required],
+      expense_date: ['', Validators.required],
+      location: [''],
+      category: ['', Validators.required],
+    });
+
+    // Fetch categories and user income
     this.fetchCategories();
     this.fetchUserIncome();
 
     // Subscribe to route query parameters to update filters and fetch data
+    // NOTE: We keep this subscription to initialize the form and data on first load
+    // and when navigating to the page with existing query params.
+    // Filter form changes will now trigger a full reload instead of just refetching data.
     const routeSubscription = this.route.queryParams.subscribe(params => {
-      // Patch form values based on query params
       this.filterForm.patchValue({
         year: params['year'] || '',
         month: params['month'] || '',
@@ -108,50 +112,35 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         sort: params['sort'] || ''
       });
 
-      // Fetch expenses and update chart based on the new filters
       this.fetchExpenses();
-      // Determine the initial chart type based on active button or default
       const activeChartBtn = document.querySelector('.chart-type-btn.active');
       this.currentChartType = (activeChartBtn?.getAttribute('data-type') as 'monthly' | 'category') || 'monthly';
       this.fetchChartData(this.currentChartType);
     });
     this.subscriptions.push(routeSubscription);
 
-     // Subscribe to filter form value changes to update the URL
-     // Use debounceTime to avoid updating URL on every keystroke
-     const filterFormSubscription = this.filterForm.valueChanges.pipe(
-        debounceTime(500), // Wait for 500ms after the last change
-        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Only emit if the value has actually changed
-     ).subscribe(filters => {
-        // Update URL query parameters without navigating
-        const queryParams: any = {};
-        if (filters.year) queryParams['year'] = filters.year;
-        if (filters.month) queryParams['month'] = filters.month;
-        if (filters.category_name) queryParams['category_name'] = filters.category_name;
-        if (filters.sort) queryParams['sort'] = filters.sort;
-
-        this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: queryParams,
-            queryParamsHandling: 'merge', // Merge with existing query params
-            replaceUrl: true // Replace the current URL state in history
-        });
-     });
-     this.subscriptions.push(filterFormSubscription);
+     // *** REMOVED: Subscription to filterForm.valueChanges ***
+     // This subscription is removed because filter changes will now trigger a full page reload
+     // via the onFilterSubmit method, which is bound to the form's submit event.
   }
 
+  ngAfterViewInit(): void {
+    // Add listener to the edit modal hidden event for debugging
+    const modalElement = this.editExpenseModal.nativeElement;
+    modalElement.addEventListener('hidden.bs.modal', () => {
+      console.log('Edit modal was hidden.');
+    });
+     console.log('ngAfterViewInit completed. Edit modal hidden listener attached.');
+  }
+
+
   ngOnDestroy(): void {
-    // Unsubscribe from all subscriptions to prevent memory leaks
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    // Destroy the chart instance
     if (this.expenseChart) {
       this.expenseChart.destroy();
     }
   }
 
-  /**
-   * Fetches the list of expense categories.
-   */
   fetchCategories(): void {
     this.isLoadingCategories = true;
     this.fetchCategoriesError = null;
@@ -161,7 +150,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         this.fetchCategoriesError = error.message || 'Failed to load categories.';
         this.isLoadingCategories = false;
         console.error('Fetch categories error:', error);
-        return of([]); // Return an empty array observable on error
+        return of([]);
       })
     )
     .subscribe(categories => {
@@ -170,17 +159,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Fetches the current user's income data.
-   * Needed for the expense vs income comparison.
-   */
   fetchUserIncome(): void {
       this.authService.getIncome().pipe(
           catchError(error => {
               console.error('Error fetching user income:', error);
-              // Handle error, maybe set a default income or show a message
-              this.currentIncome = null; // Ensure income is null on error
-              return of(null); // Return observable of null
+              this.currentIncome = null;
+              return of(null);
           })
       ).subscribe(income => {
           this.currentIncome = income;
@@ -188,14 +172,10 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
 
-  /**
-   * Fetches the list of expenses based on current filters.
-   */
   fetchExpenses(): void {
     this.isLoadingExpenses = true;
     this.fetchExpensesError = null;
 
-    // Get current filter values from the form
     const filters = this.filterForm.value;
 
     this.expenseService.getExpenses(filters).pipe(
@@ -203,19 +183,16 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         this.fetchExpensesError = error.message || 'Failed to load expenses.';
         this.isLoadingExpenses = false;
         console.error('Fetch expenses error:', error);
-        return of([]); // Return an empty array observable on error
+        return of([]);
       })
     )
     .subscribe(expenses => {
+      console.log('Expenses fetched:', expenses);
       this.expenses = expenses;
       this.isLoadingExpenses = false;
     });
   }
 
-  /**
-   * Fetches data for the expense chart based on the selected type and filters.
-   * @param type - The type of chart data to fetch ('monthly' or 'category').
-   */
   fetchChartData(type: 'monthly' | 'category'): void {
       this.isLoadingChart = true;
       this.fetchChartError = null;
@@ -228,12 +205,11 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           if (!year) {
               this.fetchChartError = 'Please select a year to view monthly expenses chart.';
               this.isLoadingChart = false;
-              this.renderChart(type, { labels: [], data: [] }); // Render empty chart
+              this.renderChart(type, { labels: [], data: [] });
               return;
           }
           chartDataObservable = this.expenseService.getMonthlySummary(year);
       } else { // 'category'
-          // For category chart, use year and category_name filters if present
           chartDataObservable = this.expenseService.getCategorySummary({
               year: filters.year,
               category_name: filters.category_name
@@ -245,8 +221,8 @@ export class ExpensesComponent implements OnInit, OnDestroy {
               this.fetchChartError = error.message || `Failed to load ${type} chart data.`;
               this.isLoadingChart = false;
               console.error(`Fetch ${type} chart data error:`, error);
-              this.renderChart(type, { labels: [], data: [] }); // Render empty chart on error
-              return of(null); // Return observable of null
+              this.renderChart(type, { labels: [], data: [] });
+              return of(null);
           })
       ).subscribe(data => {
           if (data) {
@@ -257,11 +233,6 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
 
-  /**
-   * Renders or updates the Chart.js instance.
-   * @param type - The type of chart ('bar' for now).
-   * @param chartData - The data for the chart (labels and data array).
-   */
   renderChart(type: 'monthly' | 'category', chartData: ExpenseSummary): void {
     if (!this.expenseChartCanvas) {
         console.error('Chart canvas element not found.');
@@ -274,36 +245,33 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         return;
     }
 
-    // Destroy existing chart if it exists
     if (this.expenseChart) {
       this.expenseChart.destroy();
     }
 
-    // Determine background colors
     const backgroundColor = type === 'monthly'
         ? chartData.data.map(amount => {
-             // Optional: Color bars based on expense vs income if income is available
              if (this.currentIncome && this.currentIncome.budget_amount) {
                  const incomeAmount = parseFloat(this.currentIncome.budget_amount);
-                 return amount > incomeAmount ? 'rgba(255, 99, 132, 0.5)' : 'rgba(54, 162, 235, 0.5)'; // Red if over income, blue otherwise
+                 return amount > incomeAmount ? 'rgba(255, 99, 132, 0.5)' : 'rgba(54, 162, 235, 0.5)';
              }
-             return 'rgba(54, 162, 235, 0.5)'; // Default blue if income not available
+             return 'rgba(54, 162, 235, 0.5)';
           })
-        : this.generateCategoryColors(chartData.labels.length, 0.5); // Generate colors for categories
+        : this.generateCategoryColors(chartData.labels.length, 0.5);
 
      const borderColor = type === 'monthly'
         ? chartData.data.map(amount => {
              if (this.currentIncome && this.currentIncome.budget_amount) {
                  const incomeAmount = parseFloat(this.currentIncome.budget_amount);
-                 return amount > incomeAmount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)'; // Red if over income, blue otherwise
+                 return amount > incomeAmount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)';
              }
-             return 'rgba(54, 162, 235, 1)'; // Default blue if income not available
+             return 'rgba(54, 162, 235, 1)';
           })
-        : this.generateCategoryColors(chartData.labels.length, 1); // Generate colors for categories
+        : this.generateCategoryColors(chartData.labels.length, 1);
 
 
     const chartConfig: ChartConfiguration = {
-      type: 'bar', // Or 'pie' for category chart? Let's stick to 'bar' for now.
+      type: 'bar',
       data: {
         labels: chartData.labels,
         datasets: [{
@@ -319,12 +287,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: type === 'category' // Display legend for category chart
+            display: type === 'category'
           },
           tooltip: {
             callbacks: {
               label: function(context) {
-                return '$' + parseFloat(context.raw as any).toFixed(2); // Ensure correct type casting
+                return '$' + parseFloat(context.raw as any).toFixed(2);
               }
             }
           }
@@ -352,19 +320,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Create the new chart instance
     this.expenseChart = new Chart(chartCtx, chartConfig);
   }
 
-  /**
-   * Helper function to generate colors for categories.
-   * @param count - Number of colors to generate.
-   * @param alpha - The opacity level (0 to 1).
-   * @returns An array of HSL colors.
-   */
   generateCategoryColors(count: number, alpha: number): string[] {
       const colors = [];
-      const hueStep = 360 / (count || 1); // Avoid division by zero
+      const hueStep = 360 / (count || 1);
       for (let i = 0; i < count; i++) {
           const hue = i * hueStep;
           colors.push(`hsla(${hue}, 70%, 50%, ${alpha})`);
@@ -373,57 +334,72 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
 
-  /**
-   * Handles the chart type button click.
-   * @param type - The selected chart type ('monthly' or 'category').
-   */
   onChartTypeChange(type: 'monthly' | 'category'): void {
       this.currentChartType = type;
-      // Update active button class (handled in HTML with [class.active])
-      this.fetchChartData(type); // Fetch and render chart data for the selected type
+      this.fetchChartData(this.currentChartType); // Ensure this calls with updated type
   }
 
 
   /**
    * Handles the filter form submission.
-   * The actual filtering and URL update is handled by the filterForm.valueChanges subscription.
-   * This method can be used for explicit submission if needed, but the reactive approach is better.
+   * Updates URL query parameters and triggers a full page reload.
    */
   onFilterSubmit(): void {
-      // The subscription to filterForm.valueChanges handles the logic.
-      // We can add additional logic here if needed before the subscription triggers.
-       console.log('Filter form submitted');
-       // The subscription will trigger fetchExpenses and fetchChartData
+       console.log('Filter form submitted. Updating URL and refreshing.');
+       const filters = this.filterForm.value;
+       const queryParams: any = {};
+       if (filters.year) queryParams['year'] = filters.year;
+       if (filters.month) queryParams['month'] = filters.month;
+       if (filters.category_name) queryParams['category_name'] = filters.category_name;
+       if (filters.sort) queryParams['sort'] = filters.sort;
+
+       // Construct the new URL with updated query parameters
+       const urlTree = this.router.createUrlTree([], {
+           relativeTo: this.route,
+           queryParams: queryParams,
+           queryParamsHandling: 'merge' // Merge with existing query params
+       });
+
+       // Navigate to the new URL, which will trigger a full page reload
+       // by default when the route changes with different query parameters.
+       // Alternatively, use window.location.reload() for a guaranteed full refresh.
+       // Let's use window.location.href for a clear full page reload.
+       window.location.href = this.router.serializeUrl(urlTree);
+       // Or simply: window.location.reload();
   }
 
   /**
    * Handles the reset filters button click.
+   * Resets the form and triggers a full page reload (to clear query params).
    */
   onResetFilters(): void {
+    console.log('Reset filters clicked. Resetting form and refreshing.');
     this.filterForm.reset({
       year: '',
       month: '',
       category_name: '',
       sort: ''
     });
-    // The filterForm.valueChanges subscription will handle refetching data and updating URL
+    // Trigger a full page reload to clear all query parameters from the URL
+    window.location.href = this.router.url.split('?')[0]; // Navigate to base URL without query params
+    // Or simply: window.location.reload();
   }
 
-  /**
-   * Handles the add expense form submission.
-   */
   onAddExpenseSubmit(): void {
     if (this.addExpenseForm.valid) {
       this.isAddingExpense = true;
       this.addExpenseApiErrors = null;
 
       const formData = this.addExpenseForm.value;
-      const receiptFile: File | null = formData.receipt; // Get the file object
+      const receiptFile: File | undefined = formData.receipt || undefined;
 
-      // Remove the file from the form value before sending JSON data (if no file)
-      delete formData.receipt;
+      const expenseDataForService = {
+          amount: formData.amount,
+          description: formData.description,
+          expense_date: formData.expense_date,
+          location: formData.location
+      };
 
-      // Get the category name from the selected category ID
       const selectedCategory = this.categories.find(cat => cat.id === formData.category);
       if (!selectedCategory) {
           console.error('Selected category not found.');
@@ -432,43 +408,29 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           return;
       }
       const categoryName = selectedCategory.name;
+      const categoryId = selectedCategory.id;
 
-      // Check if the expense exceeds the income (if income data is available)
+
       if (this.currentIncome && this.currentIncome.budget_amount) {
           const incomeAmount = parseFloat(this.currentIncome.budget_amount);
-          if (formData.amount > incomeAmount) {
+          if (expenseDataForService.amount > incomeAmount) {
               if (!confirm('The expense exceeds your income. Are you sure you want to add this expense?')) {
                   this.isAddingExpense = false;
-                  return; // Cancel the submission
+                  return;
               }
           }
       }
 
-
-      // Pass categoryName to the service call as per API example URL structure
-      this.expenseService.addExpense({
-          amount: formData.amount,
-          description: formData.description,
-          expense_date: formData.expense_date,
-          location: formData.location,
-          category: formData.category // Send category ID in the body
-      }, receiptFile || undefined).subscribe({
+      this.expenseService.addExpense(expenseDataForService, categoryName, categoryId, receiptFile).subscribe({
         next: (response) => {
           console.log('Expense added successfully', response);
-          // Close the modal
           this.closeModal(this.addExpenseModal);
-          // Refresh the expense list and chart
-          this.fetchExpenses();
-          this.fetchChartData(this.currentChartType);
-          this.addExpenseForm.reset(); // Reset the form
-          this.addExpenseForm.get('receipt')?.setValue(null); // Clear file input separately
-          // Show a success message (optional, could use a message service)
-          // alert('Expense added successfully!'); // Using alert for simplicity
+          // *** Added: Full page reload after successful add ***
+          window.location.reload();
         },
         error: (error) => {
           console.error('Error adding expense:', error);
           this.isAddingExpense = false;
-          // Display API errors
           if (error.error && typeof error.error === 'object') {
              this.addExpenseApiErrors = error.error as ErrorResponse;
           } else {
@@ -482,33 +444,35 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Handles file selection for the receipt input.
-   * @param event - The input change event.
-   */
   onReceiptFileSelect(event: any): void {
       const file = event.target.files.length > 0 ? event.target.files[0] : null;
       this.addExpenseForm.patchValue({
-          receipt: file // Store the file object in the form control
+          receipt: file
       });
-      // You might want to display the selected file name to the user
       console.log('Selected file:', file?.name);
   }
 
 
-  /**
-   * Opens the add expense modal.
-   */
   openAddExpenseModal(): void {
-      // Reset the form when opening the modal
+      console.log('Attempting to open add modal.');
       this.addExpenseForm.reset();
-      this.addExpenseApiErrors = null; // Clear previous errors
-      this.addExpenseForm.get('receipt')?.setValue(null); // Clear file input value
+      this.addExpenseApiErrors = null;
+      const receiptInput = this.addExpenseModal.nativeElement.querySelector('#receipt') as HTMLInputElement;
+      if (receiptInput) {
+          receiptInput.value = '';
+      }
+      this.addExpenseForm.get('receipt')?.setValue(null);
 
-      // Use Bootstrap's modal functionality
       const modalElement = this.addExpenseModal.nativeElement;
-      const modal = new bootstrap.Modal(modalElement);
+      let modal = bootstrap.Modal.getInstance(modalElement);
+      if (!modal) {
+          console.log('No existing add modal instance found, creating a new one.');
+          modal = new bootstrap.Modal(modalElement);
+      } else {
+          console.log('Existing add modal instance found.');
+      }
       modal.show();
+      console.log('Bootstrap add modal show() called.');
   }
 
   /**
@@ -516,28 +480,36 @@ export class ExpensesComponent implements OnInit, OnDestroy {
    * @param expense - The expense object to edit.
    */
   openEditExpenseModal(expense: Expense): void {
-      this.editExpenseApiErrors = null; // Clear previous errors
+      console.log('Edit button clicked. Attempting to open edit modal for expense:', expense);
+      this.editExpenseApiErrors = null;
       this.editExpenseForm.patchValue({
           id: expense.id,
-          amount: parseFloat(expense.amount), // Convert string to number
+          amount: parseFloat(expense.amount),
           description: expense.description,
           expense_date: expense.expense_date,
           location: expense.location,
-          category: expense.category // Use category ID
+          category: expense.category
       });
 
-      // Handle receipt display/upload for edit modal if needed
+      console.log('Edit form patched with values:', this.editExpenseForm.value);
 
-      // Use Bootstrap's modal functionality
       const modalElement = this.editExpenseModal.nativeElement;
-      const modal = new bootstrap.Modal(modalElement);
+      console.log('Edit modal element:', modalElement);
+
+      let modal = bootstrap.Modal.getInstance(modalElement);
+      if (!modal) {
+          console.log('No existing edit modal instance found, creating a new one.');
+          modal = new bootstrap.Modal(modalElement);
+      } else {
+          console.log('Existing edit modal instance found.');
+      }
+
       modal.show();
+      console.log('Bootstrap edit modal show() called.');
   }
 
-  /**
-   * Handles the edit expense form submission.
-   */
   onEditExpenseSubmit(): void {
+    console.log('Edit expense form submitted.');
     if (this.editExpenseForm.valid) {
       this.isUpdatingExpense = true;
       this.editExpenseApiErrors = null;
@@ -545,41 +517,34 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       const formData = this.editExpenseForm.value;
       const expenseId = formData.id;
 
-      // Check if the expense exceeds the income (if income data is available)
       if (this.currentIncome && this.currentIncome.budget_amount) {
           const incomeAmount = parseFloat(this.currentIncome.budget_amount);
           if (formData.amount > incomeAmount) {
               if (!confirm('The expense exceeds your income. Are you sure you want to update this expense?')) {
                   this.isUpdatingExpense = false;
-                  return; // Cancel the submission
+                  return;
               }
           }
       }
 
-      // Prepare update data (excluding id)
       const updateData = {
           amount: formData.amount,
           description: formData.description,
           expense_date: formData.expense_date,
           location: formData.location,
-          category: formData.category // Send category ID
+          category: formData.category
       };
 
       this.expenseService.updateExpense(expenseId, updateData).subscribe({
         next: (response) => {
           console.log('Expense updated successfully', response);
-          // Close the modal
           this.closeModal(this.editExpenseModal);
-          // Refresh the expense list and chart
-          this.fetchExpenses();
-          this.fetchChartData(this.currentChartType);
-          // Show a success message (optional)
-          // alert('Expense updated successfully!');
+          // *** Added: Full page reload after successful edit ***
+          window.location.reload();
         },
         error: (error) => {
           console.error('Error updating expense:', error);
           this.isUpdatingExpense = false;
-          // Display API errors
           if (error.error && typeof error.error === 'object') {
              this.editExpenseApiErrors = error.error as ErrorResponse;
           } else {
@@ -593,27 +558,18 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Handles the delete expense button click.
-   * @param expenseId - The ID of the expense to delete.
-   */
   onDeleteExpense(expenseId: string): void {
     if (confirm('Are you sure you want to delete this expense?')) {
       this.isDeletingExpense = true;
       this.expenseService.deleteExpense(expenseId).subscribe({
         next: (response) => {
           console.log('Expense deleted successfully', response);
-          // Refresh the expense list and chart
-          this.fetchExpenses();
-          this.fetchChartData(this.currentChartType);
-          this.isDeletingExpense = false;
-          // Show a success message (optional)
-          // alert('Expense deleted successfully!');
+          // *** Added: Full page reload after successful delete ***
+          window.location.reload();
         },
         error: (error) => {
           console.error('Error deleting expense:', error);
           this.isDeletingExpense = false;
-          // Show an error message (optional)
           let errorMessage = 'Failed to delete expense.';
           if (error.error && error.error.detail) {
               errorMessage = error.error.detail;
@@ -626,25 +582,15 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Opens the PDF receipt in a new tab or modal.
-   * @param receiptUrl - The URL of the receipt PDF.
-   */
   viewReceipt(receiptUrl: string | null): void {
       if (receiptUrl) {
-          // Assuming the receipt URL is relative to your media root
-          // You might need to prepend your backend's base URL if it's different
-          const fullUrl = `http://localhost:8000${receiptUrl}`; // Adjust if needed
-          window.open(fullUrl, '_blank'); // Open in a new tab
-          // Or implement modal display with iframe as in the original JS
+          const fullUrl = `http://localhost:8000${receiptUrl}`;
+          window.open(fullUrl, '_blank');
       } else {
           alert('No receipt available for this expense.');
       }
   }
 
-  /**
-   * Generates and downloads a yearly expense summary PDF.
-   */
   downloadYearlyPDF(): void {
       const year = this.filterForm.value.year;
       if (!year || !/^\d{4}$/.test(year)) {
@@ -652,23 +598,20 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           return;
       }
 
-      // Check if jsPDF and autoTable are loaded
-      if (typeof jsPDF === 'undefined' || typeof (jsPDF.prototype as any).autoTable !== 'function') {
+      if (typeof jsPDF === 'undefined' || typeof jsPDF.jsPDF === 'undefined' || typeof (jsPDF.jsPDF.prototype as any).autoTable !== 'function') {
           console.error('jsPDF or AutoTable plugin not properly loaded.');
           alert('PDF generation failed: Required libraries not loaded.');
           return;
       }
 
-      // Show loading indicator on the button (requires getting the button element)
-      // This is harder in Angular without direct DOM manipulation or a specific directive.
-      // For simplicity, we'll just show an alert or a global loading indicator.
-      alert('Generating PDF...'); // Simple indicator
+      alert('Generating PDF...');
 
       this.expenseService.getMonthlySummary(year).subscribe({
           next: (expenseData) => {
               try {
+                  const { jsPDF } = window.jspdf;
                   const doc = new jsPDF();
-                  // Use the user's income from the component property
+
                   const monthlyIncome = this.currentIncome ? parseFloat(this.currentIncome.budget_amount) : 0;
 
                   const monthlyData: { month: string; income: string; spending: string; remaining: string; isNegative: boolean }[] = [];
@@ -718,7 +661,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
                       columnStyles: {
                           3: { cellWidth: 'auto' }
                       },
-                      didParseCell: function(data: any) { // Use 'any' for data parameter type
+                      didParseCell: function(data: any) {
                           if (data.row.index >= 0 && data.column.index === 3) {
                               const rowData = monthlyData[data.row.index];
                               if (rowData.isNegative) {
@@ -745,7 +688,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
                       ]],
                       theme: 'grid',
                       headStyles: { fillColor: [92, 184, 92] },
-                      didParseCell: function(data: any) { // Use 'any' for data parameter type
+                      didParseCell: function(data: any) {
                           if (data.column.index === 2 && !isYearlyPositive) {
                               data.cell.styles = data.cell.styles || {};
                               data.cell.styles.fontStyle = 'bold';
@@ -784,26 +727,19 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
                   doc.save(`Expense_Summary_${year}.pdf`);
 
-              } catch (error: any) { // Use 'any' for error type
+              } catch (error: any) {
                   console.error('Error generating PDF:', error);
                   alert('Error generating PDF: ' + error.message);
               } finally {
-                  // Reset button state (if you implement button loading)
               }
           },
           error: (error) => {
               console.error('Error fetching data for PDF:', error);
               alert('Could not generate PDF: Error fetching expense data');
-              // Reset button state
           }
       });
   }
 
-
-  /**
-   * Helper function to close a Bootstrap modal.
-   * @param modalElementRef - ElementRef of the modal div.
-   */
   private closeModal(modalElementRef: ElementRef): void {
       const modalElement = modalElementRef.nativeElement;
       const modal = bootstrap.Modal.getInstance(modalElement);
