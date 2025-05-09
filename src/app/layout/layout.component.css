@@ -156,7 +156,7 @@
   .dropdown-item {
     padding: 0.5rem 1.25rem;
     font-size: 0.9rem;
-    color: var(--dark);
+    color: rgb(49, 18, 248);
     display: flex;
     align-items: center;
     gap: 0.75rem;
