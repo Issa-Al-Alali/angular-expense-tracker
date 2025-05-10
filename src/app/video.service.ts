@@ -1,9 +1,9 @@
+// src/app/video.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service'; // Assuming AuthService is available for token
-
 // Interface for a single video object
 export interface Video {
   id: string;
@@ -13,7 +13,6 @@ export interface Video {
   description: string;
   created_at: string; // ISO 8601 string
 }
-
 // Interface for the API response structure (paginated results)
 export interface VideoApiResponse {
   count: number;
@@ -21,19 +20,15 @@ export interface VideoApiResponse {
   previous: string | null; // URL for the previous page
   results: Video[]; // Array of video objects
 }
-
 @Injectable({
   providedIn: 'root'
 })
 export class VideoService {
-
   private apiUrl = 'http://127.0.0.1:8000/api/videos/'; // Your video API endpoint
-
   constructor(
     private http: HttpClient,
     private authService: AuthService // Inject AuthService to get the token
   ) { }
-
   /**
    * Gets the standard HTTP headers with Authorization token.
    * @returns HttpHeaders object.
@@ -48,7 +43,6 @@ export class VideoService {
       'Authorization': `Token ${token}` // Assuming Token-based authentication
     });
   }
-
   /**
    * Fetches a list of videos with optional pagination and search.
    * GET: http://127.0.0.1:8000/api/videos/
@@ -58,15 +52,12 @@ export class VideoService {
    */
   getVideos(page: number = 1, search: string = ''): Observable<VideoApiResponse> {
     const headers = this.getAuthHeaders();
-
     let params = new HttpParams();
     params = params.set('page', page.toString());
     if (search) {
       params = params.set('search', search);
     }
-
     console.log('Fetching videos with URL:', this.apiUrl, 'and params:', params.toString());
-
     return this.http.get<VideoApiResponse>(this.apiUrl, { headers, params }).pipe(
       tap(response => console.log('Fetched videos successfully', response)),
       catchError(error => {

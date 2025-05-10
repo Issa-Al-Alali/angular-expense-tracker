@@ -1,3 +1,5 @@
+// src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
 import { RegistrationComponent } from './registration/registration.component';
 import { LoginComponent } from './login/login.component';
@@ -20,8 +22,6 @@ export const routes: Routes = [
   // 2. Public Routes (accessible without authentication)
   { path: 'register', component: RegistrationComponent },
   { path: 'login', component: LoginComponent },
-  //games routes
-  {path: 'games', component: GamesComponent},
 
   // 3. Protected Routes (require authentication)
   // These routes use the LayoutComponent as a parent
@@ -32,19 +32,23 @@ export const routes: Routes = [
     children: [
       // Child routes that will be rendered inside the LayoutComponent's <router-outlet>
       { path: 'dashboard', component: DashboardComponent },
-      // Add routes for incomes, expenses, videos, profile here later
-      { path: 'incomes', component: IncomeComponent }, // Add this line
-      // { path: 'expenses', component: ExpensesComponent },
-      // { path: 'videos', component: VideosComponent },
-      // { path: 'profile', component: ProfileComponent },
+      { path: 'incomes', component: IncomeComponent },
+      { path: 'expenses', component: ExpensesComponent },
+
+      // Video Routes
+      { path: 'videos', component: VideosComponent }, // Video List route
+    
+
+      // Games Routes
+      {path: 'games', component: GamesComponent},
+
+      // Profile Route
+      { path: 'profile', component: ProfileComponent },
 
       // Optional: Redirect from the root of the authenticated section ('/') to the dashboard
       // This path is matched *after* the public routes and the initial redirect.
       // It ensures that if an authenticated user navigates to '/', they land on the dashboard.
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'expenses', component: ExpensesComponent },
-      { path: 'videos', component: VideosComponent, canActivate: [AuthGuard] },
-      { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // Ensure this is below other child routes
     ]
   },
 
