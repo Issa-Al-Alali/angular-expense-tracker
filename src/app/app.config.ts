@@ -4,7 +4,8 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { routes } from './app.routes';
 import { AuthService } from './auth.service';
 import { ExpenseService } from './expense.service';
-import { VideoService } from './video.service'; // Import the new service
+import { VideoService } from './video.service';
+import { UserService } from './user.service'; // Import the new service
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -12,6 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()), // Provide HttpClient
     AuthService,
     ExpenseService,
-    VideoService // Add VideoService to providers
+    VideoService,
+    UserService // Add UserService to providers
   ]
 };

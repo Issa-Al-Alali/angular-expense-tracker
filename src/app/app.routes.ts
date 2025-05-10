@@ -7,6 +7,7 @@ import { AuthGuard } from './auth.guard'; // Import the AuthGuard
 import { IncomeComponent } from './income/income.component'; // Import the IncomeComponent
 import { ExpensesComponent } from './expenses/expenses.component'; // Import the ExpensesComponent
 import { VideosComponent } from './videos/videos.component';
+import { ProfileComponent } from './profile/profile.component'; // Import the ProfileComponent
 
 export const routes: Routes = [
   // 1. Default redirect for the initial load: Redirect the root path ('') to the register page.
@@ -40,6 +41,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'expenses', component: ExpensesComponent },
       { path: 'videos', component: VideosComponent, canActivate: [AuthGuard] },
+      { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
     ]
   },
 

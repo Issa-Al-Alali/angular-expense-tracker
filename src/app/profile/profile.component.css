@@ -1,0 +1,81 @@
+/* General Styles */
+.container {
+    margin-top: 50px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #007bff; /* Use a Bootstrap primary color or your theme color */
+    color: white;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Profile Picture */
+.profile-picture-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #007bff; /* Match card header color */
+}
+
+.profile-picture-placeholder-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    color: #777;
+    border: 3px solid #007bff; /* Match card header color */
+}
+
+/* Form Styling */
+.profile-picture-form {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.profile-picture-form .form-text {
+    font-size: 14px;
+    color: #666;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .col-md-8 {
+        width: 100%;
+    }
+
+    .profile-picture-large, .profile-picture-placeholder-large {
+        width: 120px;
+        height: 120px;
+    }
+}
