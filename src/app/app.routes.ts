@@ -8,6 +8,7 @@ import { IncomeComponent } from './income/income.component'; // Import the Incom
 import { ExpensesComponent } from './expenses/expenses.component'; // Import the ExpensesComponent
 import { VideosComponent } from './videos/videos.component';
 import { ProfileComponent } from './profile/profile.component'; // Import the ProfileComponent
+import { GamesComponent } from './games/games.component';
 
 export const routes: Routes = [
   // 1. Default redirect for the initial load: Redirect the root path ('') to the register page.
@@ -19,6 +20,8 @@ export const routes: Routes = [
   // 2. Public Routes (accessible without authentication)
   { path: 'register', component: RegistrationComponent },
   { path: 'login', component: LoginComponent },
+  //games routes
+  {path: 'games', component: GamesComponent},
 
   // 3. Protected Routes (require authentication)
   // These routes use the LayoutComponent as a parent

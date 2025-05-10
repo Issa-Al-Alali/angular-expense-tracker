@@ -1,0 +1,19 @@
+<div class="tic-tac-toe-container">
+  <h2>Tic-Tac-Toe</h2>
+  <div class="status">{{ gameStatus }}</div>
+
+  <div class="board">
+    <div class="board-row" *ngFor="let row of board; let i = index">
+      <button
+        class="square"
+        *ngFor="let cell of row; let j = index"
+        (click)="handleSquareClick(i, j)"
+        [disabled]="isCellDisabled(i, j)"
+      >
+        <span [class]="getPlayerClass(cell)">{{ cell }}</span>
+      </button>
+    </div>
+  </div>
+
+  <button class="reset-button" (click)="resetGame()">Reset Game</button>
+</div>
