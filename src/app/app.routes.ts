@@ -9,6 +9,7 @@ import { AuthGuard } from './auth.guard'; // Import the AuthGuard
 import { IncomeComponent } from './income/income.component'; // Import the IncomeComponent
 import { ExpensesComponent } from './expenses/expenses.component'; // Import the ExpensesComponent
 import { VideosComponent } from './videos/videos.component';
+import { VideoDetailComponent } from './video-detail/video-detail.component'; // Import the VideoDetailComponent
 import { ProfileComponent } from './profile/profile.component'; // Import the ProfileComponent
 import { GamesComponent } from './games/games.component';
 
@@ -44,6 +45,9 @@ export const routes: Routes = [
 
       // Profile Route
       { path: 'profile', component: ProfileComponent },
+
+      { path: 'videos', component: VideosComponent }, // Route for the video list
+      { path: 'videos/:id', component: VideoDetailComponent }, // Route for video details
 
       // Optional: Redirect from the root of the authenticated section ('/') to the dashboard
       // This path is matched *after* the public routes and the initial redirect.

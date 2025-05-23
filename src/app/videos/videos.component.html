@@ -37,7 +37,9 @@
               <h5 class="card-title">{{ video.title }}</h5>
               <p class="card-text text-muted flex-grow-1">{{ video.description | slice:0:100 }}{{ video.description.length > 100 ? '...' : '' }}</p>
               <small class="text-muted mb-2">Uploaded: {{ video.created_at | date:'MMM d, y' }}</small>
-              <a href="{{ video.url }}" class="btn btn-primary mt-auto">Watch Video</a>
+              <a [routerLink]="['/videos', video.id]" class="btn btn-primary mt-2">
+                  View Details
+              </a>
             </div>
           </div>
           </div>

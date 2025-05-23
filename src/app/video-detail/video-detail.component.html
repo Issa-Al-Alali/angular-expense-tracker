@@ -1,0 +1,164 @@
+<div class="container my-4">
+  <ng-container *ngIf="isLoading">
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading video details...</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="error">
+    <div class="alert alert-danger" role="alert">
+      Error loading video: {{ error }}
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="video && !isLoading && !error">
+    <div class="row">
+      <div class="col-md-8 offset-md-2">
+        <h1 class="mb-2">{{ video.title }}</h1>
+        <p class="text-muted small">Published on {{ video.created_at | date:'MMM d, y h:mm a' }}</p>
+
+        <div class="video-thumbnail-container mb-3">
+            <img *ngIf="video.thumbnail" [src]="video.thumbnail" class="img-fluid rounded" alt="{{ video.title }} thumbnail">
+            <div *ngIf="!video.thumbnail" class="alert alert-info text-center">No thumbnail available</div>
+        </div>
+
+
+       
+
+        <div class="video-description mb-4">
+          <h5>Description</h5>
+          <p>{{ video.description || 'No description available.' }}</p>
+        </div>
+
+        <a href="{{ video.url }}" class="btn btn-primary btn-lg w-100 mt-4 mb-3">
+            <i class="bi bi-play-circle me-2"></i> Watch Video
+        </a>
+
+        <div class="d-flex align-items-center mb-4">
+           <button class="btn me-2"
+                    [ngClass]="{'btn-primary': video.liked, 'btn-outline-primary': !video.liked}"
+                    (click)="toggleLike()"
+                    [disabled]="!isAuthenticated">
+                <i class="bi" [ngClass]="{'bi-heart-fill': video.liked, 'bi-heart': !video.liked}"></i>
+                {{ video.liked ? 'Liked' : 'Like' }}
+            </button>
+           <span class="me-3">{{ video.likes_count || 0 }} Likes</span>
+            <span *ngIf="!isAuthenticated" class="text-muted small"><small>(Login to like)</small></span>
+        </div>
+
+
+        <div class="video-reviews mb-4">
+          <h5>Reviews ({{ reviewCount }})</h5>
+
+           <ng-container *ngIf="isAuthenticated">
+               <button class="btn btn-outline-secondary mb-3" (click)="toggleAddOrEditReviewForm()">
+                   {{ video.user_review ? 'Edit Your Review' : 'Add a Review' }}
+               </button>
+           </ng-container>
+            <p *ngIf="!isAuthenticated" class="text-muted small"><small>Login to add or edit your review.</small></p>
+
+
+           <div *ngIf="showAddOrEditReviewForm" class="card card-body mb-3">
+               <h6>{{ video.user_review ? 'Edit Your Review' : 'Add Your Review' }}</h6>
+                <form [formGroup]="reviewForm" (ngSubmit)="onSubmitReview()">
+                   <div class="mb-3">
+                       <label for="rating" class="form-label">Rating (1-5)</label>
+                       <input type="number" class="form-control" id="rating" formControlName="rating" min="1" max="5"
+                              [class.is-invalid]="reviewForm.get('rating')?.invalid && reviewForm.get('rating')?.touched">
+                       <div *ngIf="reviewForm.get('rating')?.invalid && reviewForm.get('rating')?.touched" class="invalid-feedback">
+                           Rating must be between 1 and 5.
+                       </div>
+                   </div>
+                    <div class="mb-3">
+                       <label for="review_text" class="form-label">Review Text</label>
+                       <textarea class="form-control" id="review_text" formControlName="review_text" rows="3" placeholder="Write your review..."
+                                 [class.is-invalid]="reviewForm.get('review_text')?.invalid && reviewForm.get('review_text')?.touched"></textarea>
+                        <div *ngIf="reviewForm.get('review_text')?.invalid && reviewForm.get('review_text')?.touched" class="invalid-feedback">
+                           Review text is required.
+                       </div>
+                   </div>
+                   <button type="submit" class="btn btn-primary" [disabled]="reviewForm.invalid">Submit Review</button>
+                    <button type="button" class="btn btn-secondary ms-2" (click)="toggleAddOrEditReviewForm()">Cancel</button>
+               </form>
+           </div>
+
+
+          <div *ngIf="reviewCount === 0 && !video?.user_review">
+            <p class="text-muted">No reviews yet.</p>
+          </div>
+
+           <ng-container *ngFor="let review of video.reviews">
+               <div class="card mb-2" *ngIf="!video.user_review || review.id !== video.user_review.id">
+                   <div class="card-body">
+                       <h6 class="card-title mb-1">
+                           {{ review.user_username || 'Anonymous User' }}
+                           - Rating: {{ review.rating }}/5
+                       </h6>
+                       <p class="card-text">{{ review.review_text }}</p>
+                        <small class="text-muted">Reviewed on {{ review.created_at | date:'mediumDate' }}</small>
+                        </div>
+               </div>
+           </ng-container>
+
+
+        </div>
+
+
+        <div class="video-comments mb-4">
+          <h5>Comments ({{ commentCount }})</h5>
+
+           <ng-container *ngIf="isAuthenticated">
+               <button class="btn btn-outline-secondary mb-3" (click)="toggleAddCommentForm()">
+                    {{ editingCommentId ? 'Editing Comment' : 'Add a Comment' }}
+               </button>
+           </ng-container>
+           <p *ngIf="!isAuthenticated" class="text-muted small"><small>Login to add or manage comments.</small></p>
+
+
+           <div *ngIf="showAddCommentForm" class="card card-body mb-3">
+               <h6>{{ editingCommentId ? 'Edit Comment' : 'Add New Comment' }}</h6>
+                <form [formGroup]="commentForm" (ngSubmit)="onSubmitComment()">
+                   <div class="mb-3">
+                       <textarea class="form-control" formControlName="content" rows="3" placeholder="Write a comment..."
+                                 [class.is-invalid]="commentForm.get('content')?.invalid && commentForm.get('content')?.touched"></textarea>
+                        <div *ngIf="commentForm.get('content')?.invalid && commentForm.get('content')?.touched" class="invalid-feedback">
+                           Comment content is required.
+                       </div>
+                   </div>
+                   <button type="submit" class="btn btn-primary" [disabled]="commentForm.invalid">
+                        {{ editingCommentId ? 'Update Comment' : 'Post Comment' }}
+                   </button>
+                    <button type="button" class="btn btn-secondary ms-2" (click)="cancelEditComment()">Cancel</button>
+               </form>
+           </div>
+
+
+          <div *ngIf="commentCount === 0">
+            <p class="text-muted">No comments yet.</p>
+          </div>
+
+          <div *ngFor="let comment of video.comments" class="card mb-2">
+            <div class="card-body">
+              <h6 class="card-title mb-1">{{ comment.user_username || 'Anonymous User' }}</h6>
+              <p class="card-text">{{ comment.content }}</p>
+              <small class="text-muted">
+                 Commented on {{ comment.created_at | date:'mediumDate' }}
+                  <ng-container *ngIf="comment.created_at !== comment.updated_at">
+                      (Edited)
+                  </ng-container>
+              </small>
+               <div *ngIf="isCommentOwner(comment)">
+                   <button class="btn btn-sm btn-outline-primary me-2" (click)="editComment(comment)">Edit</button>
+                   <button class="btn btn-sm btn-outline-danger" (click)="deleteComment(comment.id)">Delete</button>
+               </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,76 @@
+/* Style for the video player container if using iframe/video tag */
+.video-player-container {
+    position: relative;
+    width: 100%;
+    /* Use a fixed height or aspect ratio */
+    height: 400px; /* Example fixed height */
+    /* Or use padding-bottom for aspect ratio (e.g., 16:9) */
+    /* padding-bottom: 56.25%; */
+    /* height: 0; */
+    overflow: hidden;
+    background-color: #000; /* Black background for video area */
+}
+
+/* Style for the iframe/video element to fill container */
+.video-player-container iframe,
+.video-player-container video {
+    display: block; /* Remove extra space below video tag */
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure video covers container without distortion */
+}
+
+/* Adjust styles for comment/review sections */
+.video-comments, .video-reviews {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.video-comments .card, .video-reviews .card {
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+}
+
+.video-comments .card-body h6, .video-reviews .card-body h6 {
+    font-size: 1rem;
+    margin-bottom: 5px;
+    word-break: break-word; /* Prevent long usernames from overflowing */
+}
+
+.video-comments .card-body p, .video-reviews .card-body p {
+    font-size: 0.9rem;
+    color: #333;
+    word-break: break-word; /* Prevent long comments from overflowing */
+}
+
+.video-comments .card-body small, .video-reviews .card-body small {
+    display: block; /* Ensure date/edit info is on its own line */
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.75rem;
+}
+
+/* Styling for validation feedback */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: 2.375rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.9z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right .55rem center;
+    background-size: 1.25rem 1.25rem;
+}
+
+.invalid-feedback {
+    display: block; /* Ensure feedback is visible */
+    width: 100%;
+    margin-top: .25rem;
+    font-size: .875em;
+    color: #dc3545;
+}
+
+/* Optional: Add some spacing below the last review/comment card */
+.video-comments .card:last-child,
+.video-reviews .card:last-child {
+    margin-bottom: 0;
+}
