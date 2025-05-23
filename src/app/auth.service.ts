@@ -50,7 +50,7 @@ export class AuthService {
   private _isAuthenticated = new BehaviorSubject<boolean>(this.checkAuthenticationStatus());
   isAuthenticated$ = this._isAuthenticated.asObservable();
 
-  private apiUrl = 'http://localhost:8000'; // Example API URL - MAKE SURE THIS IS CORRECT
+  private apiUrl = 'https://finance-tracker-backend-dupe.onrender.com'; // Example API URL - MAKE SURE THIS IS CORRECT
 
   constructor(private http: HttpClient) { }
 

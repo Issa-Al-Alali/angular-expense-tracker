@@ -19,8 +19,8 @@ export interface User {
 export class UserService {
 
   // Assuming API endpoints for user profile
-  private userProfileUrl = 'http://localhost:8000/users/profile/'; // Endpoint to get/update user profile
-  private updateProfilePictureUrl = 'http://localhost:8000/users/profile/'; // Endpoint to update profile picture
+  private userProfileUrl = 'https://finance-tracker-backend-dupe.onrender.com/users/profile/'; // Endpoint to get/update user profile
+  private updateProfilePictureUrl = 'https://finance-tracker-backend-dupe.onrender.com/users/profile/'; // Endpoint to update profile picture
 
   constructor(
     private http: HttpClient,
@@ -44,7 +44,7 @@ export class UserService {
 
   /**
    * Fetches the authenticated user's profile data.
-   * GET: http://localhost:8000/api/users/me/
+   * GET: https://finance-tracker-backend-dupe.onrender.com/api/users/me/
    * @returns An Observable with the User object.
    */
   getUserProfile(): Observable<User> {
@@ -61,7 +61,7 @@ export class UserService {
 
   /**
    * Updates the user's profile picture.
-   * POST: http://localhost:8000/api/users/me/update_picture/
+   * POST: https://finance-tracker-backend-dupe.onrender.com/api/users/me/update_picture/
    * @param file - The new profile picture file (File object).
    * @returns An Observable with the updated User object or a success response.
    */

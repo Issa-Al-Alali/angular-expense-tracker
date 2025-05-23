@@ -61,7 +61,7 @@ export interface DeleteExpenseResponse {
 })
 export class ExpenseService {
 
-  private apiUrl = 'http://localhost:8000'; // Your Django API base URL
+  private apiUrl = 'https://finance-tracker-backend-dupe.onrender.com'; // Your Django API base URL
 
   constructor(
     private http: HttpClient,
@@ -124,7 +124,7 @@ export class ExpenseService {
 
   /**
    * Fetches monthly expense summary data for charting and PDF generation.
-   * GET: http://localhost:8000/expenses/{user_id}/monthly-summary?year={year}
+   * GET: https://finance-tracker-backend-dupe.onrender.com/expenses/{user_id}/monthly-summary?year={year}
    * @param year - The year for the summary.
    * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
    */
@@ -153,7 +153,7 @@ export class ExpenseService {
 
     /**
      * Fetches category expense summary data for charting.
-     * GET: http://localhost:8000/expenses/{user_id}/category-summary
+     * GET: https://finance-tracker-backend-dupe.onrender.com/expenses/{user_id}/category-summary
      * (Optional query params year, category_name based on previous implementation)
      * @param filters - Optional query parameters (year, category_name).
      * @returns An Observable with ExpenseSummary data ({ labels: string[], data: number[] }).
@@ -189,7 +189,7 @@ export class ExpenseService {
 
   /**
    * Adds a new expense.
-   * POST: http://localhost:8000/expenses/add/{user_id}/{category_name}/
+   * POST:https://finance-tracker-backend-dupe.onrender.com/expenses/add/{user_id}/{category_name}/
    * Handles both JSON data and FormData for file uploads.
    * @param expenseData - The expense data (amount, description, date, location).
    * @param categoryName - The name of the category (required for the URL).
@@ -256,7 +256,7 @@ export class ExpenseService {
 
   /**
    * Updates an existing expense.
-   * PUT: http://localhost:8000/expenses/update/{expense_id}/
+   * PUT: https://finance-tracker-backend-dupe.onrender.com/expenses/update/{expense_id}/
    * @param expenseId - The ID of the expense to update.
    * @param updateData - The updated expense data.
    * @returns An Observable with the UpdateExpenseResponse.
@@ -280,7 +280,7 @@ export class ExpenseService {
 
   /**
    * Deletes an expense.
-   * DELETE: http://localhost:8000/expenses/delete/{expense_id}/
+   * DELETE: https://finance-tracker-backend-dupe.onrender.com/expenses/delete/{expense_id}/
    * @param expenseId - The ID of the expense to delete.
    * @returns An Observable with the DeleteExpenseResponse.
    */
@@ -301,7 +301,7 @@ export class ExpenseService {
 
   /**
    * Fetches the list of expense categories.
-   * GET: http://localhost:8000/categories/ (Assuming a categories endpoint exists)
+   * GET: https://finance-tracker-backend-dupe.onrender.com/categories/ (Assuming a categories endpoint exists)
    * @returns An Observable with an array of Category objects.
    */
   getCategories(): Observable<Category[]> {

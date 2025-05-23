@@ -718,7 +718,7 @@ export class ExpensesComponent implements OnInit, OnDestroy, AfterViewInit {
   viewReceipt(receiptUrl: string | null): void {
       if (receiptUrl) {
           // Assuming your Django server is serving static/media files from localhost:8000
-          const fullUrl = `http://localhost:8000${receiptUrl}`;
+          const fullUrl = `https://finance-tracker-backend-dupe.onrender.com${receiptUrl}`;
           window.open(fullUrl, '_blank');
       } else {
           alert('No receipt available for this expense.');

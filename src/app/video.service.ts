@@ -60,7 +60,7 @@ export interface Review {
 })
 export class VideoService {
   // Use a base API URL for flexibility
-  private baseUrl = 'http://127.0.0.1:8000/api/';
+  private baseUrl = 'https://finance-tracker-backend-dupe.onrender.com/api/';
   private videosUrl = `${this.baseUrl}videos/`;
   private commentsUrl = `${this.baseUrl}comments/`;
 
