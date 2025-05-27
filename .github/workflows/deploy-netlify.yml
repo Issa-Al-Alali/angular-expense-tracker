@@ -1,0 +1,55 @@
+# .github/workflows/deploy-netlify.yml
+
+name: Deploy Angular to Netlify via GitHub Actions
+
+on:
+  push:
+    branches:
+      - main # This workflow will run every time you push code to the 'main' branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # This job will run on a fresh Ubuntu virtual machine provided by GitHub Actions
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # This action downloads your repository code onto the runner
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 # This action sets up the specified Node.js version on the runner
+        with:
+          node-version: '20' # IMPORTANT: Use a Node.js version compatible with your Angular CLI and project. '20' is generally good for modern Angular.
+
+      - name: Cache Node modules
+        uses: actions/cache@v4 # This action caches your node_modules to speed up subsequent builds
+        with:
+          path: ~/.npm # The path to cache (where npm stores modules)
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }} # A unique key based on OS and your package-lock.json (changes when dependencies change)
+          restore-keys: |
+            ${{ runner.os }}-node- # Fallback key if an exact match isn't found
+
+      - name: Install Angular CLI and project dependencies
+        run: |
+          npm install -g @angular/cli # Installs Angular CLI globally on the runner
+          npm install # Installs all your project's dependencies listed in package.json
+
+      - name: Build Angular app for production
+        run: ng build --configuration=production # This command executes your Angular production build, creating the 'dist' folder
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0 # This is a popular GitHub Action that simplifies deploying to Netlify
+        with:
+          # IMPORTANT: Set this path to the exact folder created inside 'dist/' by your 'ng build' command.
+          # Based on your previous logs, this is likely 'expense-tracker'.
+          publish-dir: ./dist/expense-tracker # E.g., if ng build creates 'dist/my-app', use './dist/my-app'
+
+          production-branch: main # Specifies that this deployment is for your production branch (main)
+
+          # This token is required by the Netlify action to interact with GitHub (e.g., add deploy comments to PRs/commits)
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
+
+          deploy-message: "Deployed from GitHub Actions" # A custom message for your Netlify deploy log
+
+        env: # These are environment variables for this specific step, using the secrets we created
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }} # Accesses the secret you stored in GitHub
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}     # Accesses the secret you stored in GitHub
