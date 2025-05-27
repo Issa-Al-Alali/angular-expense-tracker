@@ -22,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4 # This action sets up the specified Node.js version on the runner
         with:
-          node-version: '20' # IMPORTANT: Use a Node.js version compatible with your Angular CLI and project. '20' is generally good for modern Angular.
+          node-version: "20" # IMPORTANT: Use a Node.js version compatible with your Angular CLI and project. '20' is generally good for modern Angular.
 
       - name: Cache Node modules
         uses: actions/cache@v4 # This action caches your node_modules to speed up subsequent builds
@@ -45,15 +45,15 @@ jobs:
         with:
           # IMPORTANT: Set this path to the exact folder created inside 'dist/' by your 'ng build' command.
           # Based on your previous logs, this is likely 'expense-tracker'.
-          publish-dir: ./dist/expense-tracker # E.g., if ng build creates 'dist/my-app', use './dist/my-app'
+          publish-dir: ./dist/expense-tracker/browser # E.g., if ng build creates 'dist/my-app', use './dist/my-app'
 
           production-branch: main # Specifies that this deployment is for your production branch (main)
 
           # This token is required by the Netlify action to interact with GitHub (e.g., add deploy comments to PRs/commits)
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
           deploy-message: "Deployed from GitHub Actions" # A custom message for your Netlify deploy log
 
         env: # These are environment variables for this specific step, using the secrets we created
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }} # Accesses the secret you stored in GitHub
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}     # Accesses the secret you stored in GitHub
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }} # Accesses the secret you stored in GitHub
