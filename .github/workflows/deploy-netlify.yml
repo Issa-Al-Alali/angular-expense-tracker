@@ -7,6 +7,10 @@ on:
     branches:
       - main # This workflow will run every time you push code to the 'main' branch
 
+permissions:
+  contents: write
+  deployments: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest # This job will run on a fresh Ubuntu virtual machine provided by GitHub Actions
